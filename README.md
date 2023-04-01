@@ -18,7 +18,7 @@ A [recent toot](https://hachyderm.io/@aburka/110098164435536382) on hachyderm.io
 > Some people, when presented with a problem, think "I'll use ChatGPT to solve this problem!"
 > Now they have two problems. 
 
-- @durka
+- [@durka](https://github.com/durka)
 
 This intance I'm working with keeps forgetting things, and I've spotted plenty of issues with its code as we've gone along so far
 
