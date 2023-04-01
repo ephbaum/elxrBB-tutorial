@@ -33,3 +33,7 @@ I intend to opensource the final product (should one be built, I definitely harb
 I do hope some folks might [contribute]() in the future, maybe even some folks with actual Elixir experience will be willing to vet the project
 
 Or maybe it will be another repo gathering dust :shrug:
+
+## Important Note
+
+I make no warranty. This is a work in progress and I have no idea what I'm doing (probably). ChatGPT and I seem to be having a pretty productive conversation, but this may all be made up bullshit. Do not rely on it until this document suggests otherwise. 
