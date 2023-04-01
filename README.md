@@ -14,7 +14,11 @@ The conversation around ChatGPT right now is wild. There's a lot of [doomers](ht
 
 A [recent toot](https://hachyderm.io/@aburka/110098164435536382) on hachyderm.io seems to suggest another point of view:
 
-<iframe src="https://hachyderm.io/@aburka/110098164435536382/embed" class="mastodon-embed" style="max-width: 100%; border: 0" width="400" allowfullscreen="allowfullscreen"></iframe><script src="https://hachyderm.io/embed.js" async="async"></script>
+> Updating a classic:
+> Some people, when presented with a problem, think "I'll use ChatGPT to solve this problem!"
+> Now they have two problems. 
+
+- @durka
 
 This intance I'm working with keeps forgetting things, and I've spotted plenty of issues with its code as we've gone along so far
 
