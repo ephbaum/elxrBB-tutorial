@@ -1,0 +1,6 @@
+# What’s our mission with this project? 
+
+> The mission of this project is to provide a comprehensive, accessible, and engaging tutorial series that teaches learners how to build a complete web application using the Elixir programming language and the Phoenix framework. By building elxrBB, a forum system with a wide range of features, learners will gain hands-on experience in implementing various functionalities, integrating external services, and following best practices for web development.
+> By the end of the tutorial series, learners should have a solid understanding of Elixir, Phoenix, and related technologies, as well as the skills and confidence to develop their own web applications. The project aims to empower learners to become proficient in Elixir and Phoenix and contribute to the growing ecosystem surrounding these technologies. Additionally, the elxrBB application itself will be an open-source solution, allowing others to use or modify it as needed, further promoting the growth and adoption of Elixir and Phoenix.
+
+- ChatGPT
