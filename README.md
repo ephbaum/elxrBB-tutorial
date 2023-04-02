@@ -1,6 +1,6 @@
 # elxrBB-tutorial
 
-A (an ambitious) collaborative effort with ChatGPT (GPT-4) to create a tutorial, and open source, a form application
+A (an ambitious) collaborative effort with ChatGPT (GPT-4) to create a tutorial for, and open source, a forum web application
 
 ## What?
 
@@ -20,13 +20,13 @@ A [recent toot](https://hachyderm.io/@aburka/110098164435536382) on hachyderm.io
 
 - [@durka](https://github.com/durka)
 
-This intance I'm working with keeps forgetting things, and I've spotted plenty of issues with its code as we've gone along so far
+This intance I'm working with keeps forgetting things, and I've spotted plenty of issues with its code as we've gone along so far, but this feels like a good opportunity to try to learn how to work with a LLM to accomplish larger projects
 
 I harbor no illusions that this will be successful. I'm sure some, if not most, of its code is crap, maybe even already outdated
 
-But there is something amazing about working with an always there (except when you hit the 25 message cap) knowledge partner that is omniscient (presenting). 
+There is something amazing about working with an always-there (except when you hit the 25 message cap) knowledge partner that is omniscient (presenting). 
 
-It's a hell of a "yes-man"
+ChatGPT is a hell of a "yes-man" and has a pretty wide array of knowledge to draw from-
 
 ## How?
 
