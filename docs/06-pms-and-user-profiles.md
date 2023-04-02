@@ -115,4 +115,44 @@ Add an `avatar` field to the `User` schema in `lib/elxr_bb/accounts/user.ex`:
 ```elixir
 schema "users" do
   # ... other fields ...
-  field :
+  field :avatar, ElxrBB.Avatar.Type
+
+  timestamps()
+end
+```
+
+Update the registration and user edit forms to include an avatar upload field.
+
+4. **Configuring file storage with Digital Ocean Block Storage**
+
+To configure file storage with Digital Ocean Block Storage, we will use the [Arc Digital Ocean Spaces](https://github.com/stavro/arc_digitalocean_spaces) library. First, add Arc Digital Ocean Spaces to your `mix.exs` dependencies:
+
+```elixir
+defp deps do
+  [
+    # ... other deps ...
+    {:arc_digitalocean_spaces, "~> 0.1"}
+  ]
+end
+```
+
+Fetch the new dependency:
+
+```sh
+mix deps.get
+```
+
+Configure Arc to use Digital Ocean Spaces by adding the following configuration to your `config/config.exs` file:
+
+```elixir
+config :arc,
+  storage: Arc.Storage.DigitalOceanSpaces,
+  digitalocean_spaces: [
+    space: "your-space-name",
+    region: "your-space-region",
+    access_key_id: "your-access-key-id",
+    secret_access_key: "your-secret-access-key"
+  ]
+```
+
+Now, your elxrBB application has private messaging, user profiles with biographies and preferred names, an avatar system with file uploads, and file storage with Digital Ocean Block Storage. Users can now send private messages to each other, customize their profiles, and upload avatars to enhance their presence on the forum.
