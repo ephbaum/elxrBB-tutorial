@@ -1,4 +1,4 @@
-# Lesson 4: Implementing Basic Forum Functionality
+# Lesson 3: Implementing Basic Forum Functionality
 
 In this lesson, we'll implement basic forum functionality for the elxrBB application, including creating topics, replying to topics, and displaying a list of topics.
 

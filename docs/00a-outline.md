@@ -16,23 +16,22 @@
 - Customizing user registration with a random username
 - Testing user authentication
 
-## Lesson 3: Implementing PowAssent for Social Media Authentication
-- Adding PowAssent to your project
-- Configuring PowAssent for Google, Facebook, and Twitter
-- Handling callback URLs
-- Testing social media authentication
-
-## Lesson 4: Implementing Basic Forum Functionality
+## Lesson 3: Implementing Basic Forum Functionality
 - Creating a new context for forums
 - Defining the Topic and Reply schemas
 - CRUD operations for topics and replies
 - Updating the router, controller, and views
 - Creating templates for topics and replies
 
-## Lesson 5: Implementing Threaded Replies and Upvoting/Downvoting
+## Lesson 4: Implementing Threaded Replies and Upvoting/Downvoting
 - Adding threaded replies to topics
 - Creating upvote and downvote functionality
 - Updating the UI to display threaded replies and votes
+
+## Lesson 5: Implementing Sub-Topics and Displaying Sub-Topic Counts
+- Adding sub-topic functionality to threaded replies
+- Updating the UI to display sub-topic counts
+- Providing a view for sub-topics
 
 ## Lesson 6: Adding Private Messaging and User Profiles
 - Implementing private messaging between users
@@ -62,47 +61,32 @@
 - Integrating browser notifications
 - Configuring SMS/Voice notifications with Twilio for Pro Users
 
-## Lesson 11: Implementing an Event-Driven Architecture (Optional)
-- Overview of event-driven architecture
-- Refactoring the application to use events
-- Implementing event handlers and subscribers
-
-## Lesson 12: Integrating Real-Time Updates with Phoenix Channels
+## Lesson 11: Integrating Real-Time Updates with Phoenix Channels
 - Overview of Phoenix Channels
 - Setting up channels for topics and replies
 - Implementing real-time updates in the UI
 
-## Lesson 13: Populating the Animal Names Database and Integrating with JavaScript
+## Lesson 12: Populating the Animal Names Database and Integrating with JavaScript
 - Creating the database table for animal names
 - Importing animal names from an external source
 - Integrating with JavaScript to provide random animal names
 
-## Lesson 14: Implementing Sub-Topics and Displaying Sub-Topic Counts
-- Adding sub-topic functionality to threaded replies
-- Updating the UI to display sub-topic counts
-- Providing a view for sub-topics
-
-## Lesson 15: Implementing Accessible Design (a11y)
+## Lesson 13: Implementing Accessible Design (a11y)
 - Overview of accessibility in web applications
 - Best practices for accessible design in elxrBB
 - Implementing and testing accessibility features
 
-## Lesson 16: Writing Tests for Your Application
+## Lesson 14: Writing Tests for Your Application
 - Introduction to testing in Elixir and Phoenix
 - Writing tests for elxrBB's main features
 - Running tests and interpreting test results
 
-## Lesson 17: Object-Oriented vs. Functional Programming (Optional)
-- Overview of object-oriented and functional programming paradigms
-- Comparing the two approaches
-- Understanding the advantages and disadvantages of each paradigm
-
-## Lesson 18: Deploying Your elxrBB Application
+## Lesson 15: Deploying Your elxrBB Application
 - Preparing your application for deployment
 - Deploying elxrBB to a server or cloud platform
 - Configuring the production environment and ensuring security
 
-## Lesson 19: Customizing and Extending elxrBB
+## Lesson 16: Customizing and Extending elxrBB
 - Overview of customization options for elxrBB
 - Implementing custom features and extensions
 - Contributing to the elxrBB open-source project
@@ -111,3 +95,13 @@
 - Reviewing what you've learned
 - Exploring additional resources and further learning
 - Final thoughts on building a complete web application with Elixir and Phoenix
+
+## Appendix A: Implementing an Event-Driven Architecture (Optional)
+- Overview of event-driven architecture
+- Refactoring the application to use events
+- Implementing event handlers and subscribers
+
+## Appendix B: Object-Oriented vs. Functional Programming (Optional)
+- Overview of object-oriented and functional programming paradigms
+- Comparing the two approaches
+- Understanding the advantages and disadvantages of each paradigm

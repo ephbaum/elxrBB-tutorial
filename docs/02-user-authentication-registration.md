@@ -1,4 +1,4 @@
-# Lesson 3: Implementing User Authentication and Registration
+# Lesson 2: Implementing User Authentication and Registration
 
 In this lesson, we'll implement user authentication and registration for the elxrBB application using the [Pow library](https://powauth.com/). We'll also set up email verification and create a system for generating random usernames.
 
