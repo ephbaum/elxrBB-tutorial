@@ -81,6 +81,120 @@ I was able to complete the instructions above by reinstalling `hex` and then ins
 
 ---
 This guide is "valid" to this point - EB
+
+Below there may be dragons, but I diverged a little at this point, first I uninstalled/reinstalled Docker Desktop so that it would work properly again. That seemed to clear some kind of bottleneck so that I could again use `docker` on WSL2.
+
+I began, then, chatting with ChatGPT about getting Docker working. It took a little bit of back and forth and a couple of false starts, but we started making progress
+
+First we created a new Phoenix project (having read the book, Phoenix Project always makes me chuckle):
+
+```sh
+mix phx.new elxrBB --database postgres
+```
+
+In hindsight I see that the instructions below suggested the --live flag, so I may reinstall this one more time to make it work -- remembering again to `git branch -m master main` after my first commit -- in collaboration with ChatGPT, I tried to work through the needed files to make Docker work. I may regret this later.
+
+Anyway, then I got into my project:
+
+```sh
+cd elxrBB
+```
+
+Then I generated a secret, because this seems to be the way to populate a value for an ENV variable that's in my `docker-compose.yml` later:
+
+```sh
+mix phx.gen.secret 
+```
+
+Then created a Dockerfile:
+
+```Dockerfile
+# Use the official Elixir image as the base
+FROM elixir:1.14-alpine
+
+# Install required build dependencies
+RUN apk add --update \
+  build-base \
+  git \
+  nodejs \
+  npm \
+  postgresql-dev \
+  yarn
+
+# Install Hex and Rebar
+RUN mix local.hex --force && \
+    mix local.rebar --force
+
+# Set the working directory
+WORKDIR /app
+
+# Copy required files
+COPY mix.exs mix.lock ./
+
+# Fetch dependencies
+RUN mix do deps.get, deps.compile
+
+# Copy the rest of the application
+COPY . .
+
+# Compile the application
+RUN mix do compile
+
+# Install Node.js dependencies
+RUN npm install --prefix assets
+
+# Build the assets
+RUN npm run deploy --prefix assets
+RUN mix phx.digest
+
+# Expose the application port
+EXPOSE 4000
+
+# Set the default command to run the Phoenix server
+CMD ["mix", "phx.server"]
+```
+
+Then created a docker-compose.yml.example file:
+
+```docker-compose.yml
+version: "3.8"
+
+services:
+  app:
+    build: .
+    ports:
+      - "4000:4000"
+    depends_on:
+      - db
+    environment:
+      - MIX_ENV=prod
+      - SECRET_KEY_BASE=your-secret-key-base
+      - DATABASE_URL=ecto://postgres:postgres_password@db:5432/elxrbb_prod
+      - PORT=4000
+      - HOST=localhost
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_password
+      - POSTGRES_DB=elxrbb_prod
+```
+
+Then I added `docker-compose.yml` to `.gitignore` and copied my new example file over:
+
+```sh
+cp docker-compose.yml.example docker-compose.yml
+```
+
+And in that file I updated the `SECRET_KEY_BASE` value as well as the Postgres credentials to be a bit more secure. 
+
+Then I tried to build, but ran into trouble beccasue it seems I should have a `package.json` file in `assets/`, according to ChatGPT, but I only have them in `deps/` and at this point it's insistent that this is not where they belong and they should be moved, but I don't think it's right...
+
+but it's getting late and I need to get to bed, so I'll try to reason my way through this another time. I regret that this didn't Just Work™️ because I had hoped to get a repo up with some boilerplate stuff that included these files but, alas, I'll need to wait. 
+
 ---
 
 ### Install PostgreSQL
