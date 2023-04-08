@@ -141,10 +141,10 @@ COPY . .
 RUN mix do compile
 
 # Install Node.js dependencies
-RUN npm install --prefix assets
+# RUN npm install --prefix assets
 
 # Build the assets
-RUN npm run deploy --prefix assets
+# RUN npm run deploy --prefix assets
 RUN mix phx.digest
 
 # Expose the application port
@@ -189,11 +189,117 @@ Then I added `docker-compose.yml` to `.gitignore` and copied my new example file
 cp docker-compose.yml.example docker-compose.yml
 ```
 
+(I pivoted after an error related to NPM)
+
 And in that file I updated the `SECRET_KEY_BASE` value as well as the Postgres credentials to be a bit more secure. 
 
-Then I tried to build, but ran into trouble beccasue it seems I should have a `package.json` file in `assets/`, according to ChatGPT, but I only have them in `deps/` and at this point it's insistent that this is not where they belong and they should be moved, but I don't think it's right...
+Following directions at [Pheonix Up and Running](https://hexdocs.pm/phoenix/up_and_running.html) I made sure to update `config\dev.exs` with the database password you defined in your `docker-compose.yml`.
 
-but it's getting late and I need to get to bed, so I'll try to reason my way through this another time. I regret that this didn't Just Work™️ because I had hoped to get a repo up with some boilerplate stuff that included these files but, alas, I'll need to wait. 
+For now, I just eant to be able to verify that this project is working locally without installing PostgresDB in WSL2
+
+```sh
+docker-compose up db -d
+```
+
+Then, with Postgresql running I used my host machines install of mix again:
+
+```sh
+mix ecto.create
+```
+
+Which seemed to go pretty well: 
+
+```
+Compiling 15 files (.ex)
+Generated elxrBB app
+The database for ElxrBB.Repo has been created
+```
+
+```sh
+mix phx.server
+```
+
+Which exposed this error:
+
+```
+[error] `inotify-tools` is needed to run `file_system` for your system, check https://github.com/rvoicilas/inotify-tools/wiki for more information about how to install it. If it's already installed but not be found, appoint executable file with `config.exs` or `FILESYSTEM_FSINOTIFY_EXECUTABLE_FILE` env.
+```
+
+Which seems like a bit of a bummer, but I'll see about installing `inotify-tools` next, I suppose, but it otherwise appears to have worked, this is good news, I suppose, given that I'm just muddling along trying to listen to ChatGPT and follow instructions. 
+
+The rest of the output says I'm at least broadly up and running
+
+```
+[warning] Could not start Phoenix live-reload because we cannot listen to the file system.
+You don't need to worry! This is an optional feature used during development to
+refresh your browser when you save files and it does not affect production.
+
+[info] Running ElxrBBWeb.Endpoint with cowboy 2.9.0 at 127.0.0.1:4000 (http)
+[info] Access ElxrBBWeb.Endpoint at http://localhost:4000
+[watch] build finished, watching for changes...
+
+Rebuilding...
+
+Done in 328ms.
+[info] GET /
+[debug] Processing with ElxrBBWeb.PageController.home/2
+  Parameters: %{}
+  Pipelines: [:browser]
+[info] Sent 200 in 74ms
+[info] GET /
+[debug] Processing with ElxrBBWeb.PageController.home/2
+  Parameters: %{}
+  Pipelines: [:browser]
+[info] Sent 200 in 3ms
+```
+
+That second request was served up mighty quick.
+
+Of course I can't help but wonder why I got an NPM error in the first place :thinking:
+
+So, I've removed the NPM lines for now.
+
+Now when I run `docker-compose up -d` everything builds and I get a working server at https://localhost:4000 :tada:
+
+That wasn't too painful, I suppose
+
+I have two containers and I didn't have to do _too_ much to get things work besides a little RTFM, which, I suppose I was trying to bypass a little bit by using ChatGPT in the first place... :thinking:
+
+Still, it's 
+
+                  ,--,                                  
+               ,---.'|                                  
+   ,---,       |   | :      ,---,                ,---,. 
+  '  .' \      :   : |   ,`--.' |       ,---.  ,'  .' | 
+ /  ;    '.    |   ' :   |   :  :      /__./|,---.'   | 
+:  :       \   ;   ; '   :   |  ' ,---.;  ; ||   |   .' 
+:  |   /\   \  '   | |__ |   :  |/___/ \  | |:   :  |-, 
+|  :  ' ;.   : |   | :.'|'   '  ;\   ;  \ ' |:   |  ;/| 
+|  |  ;/  \   \'   :    ;|   |  | \   \  \: ||   :   .' 
+'  :  | \  \ ,'|   |  ./ '   :  ;  ;   \  ' .|   |  |-, 
+|  |  '  '--'  ;   : ;   |   |  '   \   \   ''   :  ;/| 
+|  :  :        |   ,/    '   :  |    \   `  ;|   |    \ 
+|  | ,'        '---'     ;   |.'      :   \ ||   :   .' 
+`--''                    '---'         '---" |   | ,'   
+                                             `----'     
+
+I, however, am exhausted as it's been a hell of a week and my tank is empty. But I'm excited to see if any of this works. 
+
+I am pleased to see this working as I would expect, at least, and without too much tinkering over the course of about an hour of tinkering.
+
+I do regret trusting ChatGPT to generate good boilerplate without scrutinizing it a bit better, this should be easy to integrate into any instructions.  
+
+I also wonder if the ascii art above will look right on GitHub :thinking: 
+
+
+Next up I'll update the below... soon-ish - but I'm about ready to start vetting the next section where I'll actually be building _something_. 
+
+@TODOs
+
+- [ ] - what's the deal with the config files not being .gitignore but containing secrets?
+- [ ] - what's the deal with salt in the `lib/elxrBB_web/endpoint.ex`?
+
+🛌
 
 ---
 
