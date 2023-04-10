@@ -297,9 +297,23 @@ Next up I'll update the below... soon-ish - but I'm about ready to start vetting
 @TODOs
 
 - [ ] - what's the deal with the config files not being .gitignore but containing secrets?
-- [ ] - what's the deal with salt in the `lib/elxrBB_web/endpoint.ex`?
+  - Not really worried about this for now, I think 
+- [x] - what's the deal with salt in the `lib/elxrBB_web/endpoint.ex`?
+  - Oh, yeah, I reinstalled and it generated new salts
 
 🛌
+
+Following up after a sleep or two, I recognize this is probably not the best setup, but I am hoping to build from here as I go. My mediocre Docker skills are strong enough to recognize some improvements to be made here -- such as moving the environment variables into their own files... but this whole project isn't about playing with Docker, so I'm moving on to actually making something happen and I'll just fix issues as I muddle along. Sometimes you just gotta bang on the Docker to get it to work. Like the Millenium Falcon.  
+
+I wonder if it's worth a pivot to doing a simple Hello World, but I'm eager to see how bad ChatGPT's instructions for adding user auth are going to be 🤣
+
+⌛
+
+As a signpost for later (or whoever might be curious): banging on Docker hasn't really worked. 
+
+I've encountered user permission issues. The Docker container was writing files as root when using mix, I think, but that made it a challenge to then update the files (from Windows especially). I tried to fix that but adding the appropriate user with the matching host `id -u && id -g` - but that doesn't seem to be a fix, as I was getting new permission errors at the end of the build, for now, I'll push up my changes and I'm considering giving up Docker. In my eagerness to move on I have been using my host installed elixir (but still running `docker-compose up db -d` to at least keep my Postgresql instance consistent😅) 
+
+I'll be back :terminator:
 
 ---
 

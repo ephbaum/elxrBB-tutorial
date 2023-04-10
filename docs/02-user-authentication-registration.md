@@ -2,7 +2,15 @@
 
 In this lesson, we'll implement user authentication and registration for the elxrBB application using the [Pow library](https://powauth.com/). We'll also set up email verification and create a system for generating random usernames.
 
+The Pow website does a great job extolling the virtues of the Pow system, but let it suffice to say that it does a lot of the hard work for you. 
+
+It's worth noting that you should probably dig in and understand the work that it's doing. There's a lot of value in learning to write your own authentication functionality, but this should give us a little bit of a boost in just creating our application since the library claims to be "batteries included" for production out-of-the-box. 
+
+That said, with no idea how this works, I'm about to embark on trying to make this work based on these instructions (that may hail back to the pre-2021 ChatGPT memory cut-off)
+
 ## Add Pow to elxrBB
+
+The instructions are prety clear, and can be found [here](https://hexdocs.pm/pow/README.html#installation). 
 
 First, we need to add the Pow library to our `mix.exs` file. Open the file and add `{:pow, "~> 1.0"}` to the `deps` function:
 
@@ -15,7 +23,48 @@ defp deps do
 end
 ```
 
-Then, run `mix deps.get` to fetch the new dependency.
+Next run `mix deps.get` to fetch the new dependency.
+
+Then you'll need to run `docker-compose exec app mix pow.install` to create and update the necessary files for Pow
+
+Now, for this tutorial, we'll want to exposed the Pow Templates: `mix pow.phoenix.gen.templates` which will allow us to modify the templates later. 
+
+Next we'll enable [some extensions](https://hexdocs.pm/pow/README.html#add-extensions-support): 
+
+`mix pow.extension.phoenix.gen.templates --extension PowResetPassword --extension PowEmailConfirmation`
+
+and then update some files:
+
+``` config/config.exs
+config :my_app, :pow,
+  ...
+  extensions: [PowResetPassword, PowEmailConfirmation],
+  controller_callbacks: Pow.Extension.Phoenix.ControllerCallbacks
+```
+
+(also user.ex and router.ex will need updated -- see link above)
+
+Now we'll create the Mailer Integration, so follow [those instructions](https://hexdocs.pm/pow/README.html#mailer-support)
+
+This will have you create a mock mailer (instead of using swoosh?) and add it to your config so that now the emails will be logged to the debugger logfile, and here I am still stuffing this all into the first step of this particular step and still just trying to get things configured :le_sigh:
+
+⌛
+
+I'm all over the place trying to get this working - I'm struggling a little bit. Seems ChatGPT might have been a bit eager with the `users` schema, so I made the needed migration for that and updated
+
+I also tried to build a `users` repo as described below, and added a users_test - which seems to have gottem me into a whole new set of troubles, but I'm making progress - I'm down to one test that I'm not quite grokking and, try as it might, neither is ChatGPT
+
+At this point, I'm still working my way through this document, however. 
+
+I think I might be close to implementing everything for this lesson, but may need to make some improvements to make the document less a recipe and more an explanation - it also feels very light on direction :laughing:
+
+I'm please to have made any progress of any sort, and some of these things are making some sense :)
+
+---
+
+Below may be dragons, above too, probably - EB
+
+---
 
 ## Configure Pow
 
