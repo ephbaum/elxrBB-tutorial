@@ -58,7 +58,35 @@ At this point, I'm still working my way through this document, however.
 
 I think I might be close to implementing everything for this lesson, but may need to make some improvements to make the document less a recipe and more an explanation - it also feels very light on direction :laughing:
 
-I'm please to have made any progress of any sort, and some of these things are making some sense :)
+I'm pleased to have made any progress of any sort, and some of these things are making some sense :)
+
+16 Apr 2023 - 
+
+I'm back, hello there- what a mess I'm making, eh?
+
+I have added a couple of files to this project recently related to the Gerund Verb + Animal Name + Rnadom _n_ digit username behavior, and of course I'm rabbit holing a little bit on this behavior, but I think it will be worth it in the end. 
+
+I'm in the process of updating the project to use the username field - to try to keep things clean, and understanding it's not really intended to work this way, I tried to alter the existing migration and drop the whole DB to start over but I think the test DB is not getting the memo, so I will deal with this broken tests soon. 
+
+Meanwhile, in addition to adding `:username` to the user schema, I also edited the `config.exs` and so that it looks like this: 
+
+```config.exs
+config :elxrBB, :pow,
+  web_mailer_module: ElxrBBWeb,
+  web_module: ElxrBBWeb,
+  user: ElxrBB.Users.User,
+  repo: ElxrBB.Repo,
+  extensions: [PowResetPassword, PowEmailConfirmation],
+  controller_callbacks: Pow.Extension.Phoenix.ControllerCallbacks,
+  mailer_backend: ElxrBB.Pow.Mailer,
+  identity_field: :username
+```
+
+Which added the `identity_field: :username` k/v pair to our `:pow` configuration
+
+Maybe it's supposed to be  `user_id_field: :username` - that's something to look into: 😅
+
+Good night...
 
 ---
 
