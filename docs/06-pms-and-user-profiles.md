@@ -63,19 +63,19 @@ Next, create the `MessageController`, templates, and views for listing, creating
 
 2. **Creating user profiles with biographies and preferred names**
 
-Add `bio` and `preferred_name` fields to the `User` schema in `lib/elxr_bb/accounts/user.ex`:
+Add `bio` and `username` fields to the `User` schema in `lib/elxr_bb/accounts/user.ex`:
 
 ```elixir
 schema "users" do
   field :bio, :string
-  field :preferred_name, :string
+  field :username, :string
   # ... other fields ...
 
   timestamps()
 end
 ```
 
-Update the registration form and user edit form to include fields for the new `bio` and `preferred_name` attributes.
+Update the registration form and user edit form to include fields for the new `bio` and `username` attributes.
 
 3. **Implementing an avatar system with file uploads**
 

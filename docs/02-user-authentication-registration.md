@@ -120,7 +120,7 @@ defmodule elxrBB.Users.User do
   schema "users" do
     pow_user_fields()
 
-    field :preferred_name, :string
+    field :username, :string
     field :bio, :string
 
     timestamps()
@@ -129,8 +129,8 @@ defmodule elxrBB.Users.User do
   def changeset(user, attrs) do
     user
     |> pow_changeset(attrs)
-    |> Ecto.Changeset.cast(attrs, [:preferred_name, :bio])
-    |> Ecto.Changeset.validate_required([:preferred_name, :bio])
+    |> Ecto.Changeset.cast(attrs, [:username, :bio])
+    |> Ecto.Changeset.validate_required([:username, :bio])
   end
 end
 ```
@@ -204,9 +204,9 @@ Now, update the registration template (`lib/elxrBB_web/templates/pow/registratio
   <%= password_input f, :password_confirmation %>
   <%= error_tag f, :password_confirmation %>
 
-  <%= label f, :preferred_name, "Preferred Name (Randomized by default)" %>
-  <%= text_input f, :preferred_name, value: @changeset.data.preferred_name || random_username() %>
-  <%= error_tag f, :preferred_name %>
+  <%= label f, :username, "Username (Randomized by default)" %>
+  <%= text_input f, :username, value: @changeset.data.username || random_username() %>
+  <%= error_tag f, :username %>
 
   <%= label f, :bio %>
   <%= textarea f, :bio %>
@@ -216,6 +216,6 @@ Now, update the registration template (`lib/elxrBB_web/templates/pow/registratio
 <% end %>
 ```
 
-This will pre-fill the preferred name field with a randomly generated username. Users can click the "Randomize" button to generate a new random username.
+This will pre-fill the username field with a randomly generated username. Users can click the "Randomize" button to generate a new random username.
 
 Now that we have implemented user authentication and registration, we can move on to the next lesson, where we'll implement the forum functionality.
