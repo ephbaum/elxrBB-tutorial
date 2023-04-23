@@ -88,6 +88,15 @@ Maybe it's supposed to be  `user_id_field: :username` - that's something to look
 
 Good night...
 
+
+And we're back... 
+
+I went back and forth with GPT-4 until running out of queries and now I'm frustrated. 
+
+I blogged about the thing but ultimately I just stashed those changes in a branch (`feat/auth-by-username`) and I'm going to try to move on for now. 
+
+I'm making progress, I really am, but this is definitely not working as well as I'd originally hoped 😓
+
 ---
 
 Below may be dragons, above too, probably - EB
