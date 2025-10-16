@@ -1,220 +1,198 @@
 # Lesson 3: Implementing Basic Forum Functionality
 
-In this lesson, we'll implement basic forum functionality for the elxrBB application, including creating topics, replying to topics, and displaying a list of topics.
+## Status: 🚧 INCOMPLETE - PLANNED
 
-1. Create a new context `Forums` in `lib/elxrBB/forums/forums.ex`. Define the `Topic` and `Reply` schemas in this file.
+**Note**: This lesson is currently incomplete. The forum functionality described below needs to be implemented in the application.
+
+## Overview
+
+In this lesson, we'll implement the core forum functionality for elxrBB, including:
+
+- Forum categories
+- Discussion topics
+- Topic replies
+- User associations
+- Basic CRUD operations
+
+## Planned Implementation
+
+### 1. Database Schema Design
+
+We'll create three main entities:
+
+```
+Forums (Categories)
+├── id
+├── name (string)
+├── description (text)
+├── created_at
+└── updated_at
+
+Topics (Discussions)
+├── id
+├── title (string)
+├── body (text)
+├── forum_id (references forums)
+├── user_id (references users)
+├── created_at
+└── updated_at
+
+Replies (Comments)
+├── id
+├── body (text)
+├── topic_id (references topics)
+├── user_id (references users)
+├── created_at
+└── updated_at
+```
+
+### 2. Phoenix Generators
+
+We'll use Phoenix generators to create the contexts and LiveViews:
+
+```bash
+# Create Forum context
+mix phx.gen.live Forums Forum forums name:string description:text
+
+# Create Topic context
+mix phx.gen.live Forums Topic topics title:string body:text forum_id:references:forums user_id:references:users
+
+# Create Reply context
+mix phx.gen.live Forums Reply replies body:text topic_id:references:topics user_id:references:users
+```
+
+### 3. Database Migrations
+
+After running the generators, we'll need to:
+
+- Run `mix ecto.migrate` to create the database tables
+- Add proper indexes for performance
+- Set up foreign key constraints
+
+### 4. Context Functions
+
+The Forums context will include:
 
 ```elixir
-defmodule ElxrBB.Forums.Topic do
-  use Ecto.Schema
-  import Ecto.Changeset
+# Forum functions
+- list_forums/0
+- get_forum!/1
+- create_forum/1
+- update_forum/2
+- delete_forum/1
 
-  schema "topics" do
-    field :title, :string
-    field :content, :string
-    has_many :replies, elxrBB.Forums.Reply
-    belongs_to :user, elxrBB.Users.User
+# Topic functions
+- list_topics/0
+- list_topics_by_forum/1
+- get_topic!/1
+- create_topic/2 (attrs, user)
+- update_topic/2
+- delete_topic/1
 
-    timestamps()
-  end
-
-  def changeset(topic, attrs) do
-    topic
-    |> cast(attrs, [:title, :content])
-    |> validate_required([:title, :content])
-    |> assoc_constraint(:user)
-  end
-end
-
-defmodule ElxrBB.Forums.Reply do
-  use Ecto.Schema
-  import Ecto.Changeset
-
-  schema "replies" do
-    field :content, :string
-    belongs_to :topic, elxrBB.Forums.Topic
-    belongs_to :user, elxrBB.Users.User
-
-    timestamps()
-  end
-
-  def changeset(reply, attrs) do
-    reply
-    |> cast(attrs, [:content])
-    |> validate_required([:content])
-    |> assoc_constraint(:topic)
-    |> assoc_constraint(:user)
-  end
-end
+# Reply functions
+- list_replies_by_topic/1
+- get_reply!/1
+- create_reply/2 (attrs, user)
+- update_reply/2
+- delete_reply/1
 ```
 
----
+### 5. LiveView Implementation
 
-In Elixir and the Phoenix framework, a context is a design pattern used to organize related functionality and separate concerns within an application. A context represents a specific part of the application's domain and encapsulates the logic and data access for that part.
+We'll create LiveViews for:
 
-Contexts help you organize your code by grouping related functions and data models. They act as a boundary that separates different parts of the application, promoting a clear separation of concerns and making it easier to understand and maintain the code.
+- Forum listing page
+- Topic listing page (by forum)
+- Individual topic view with replies
+- Topic creation form
+- Reply creation form
 
-In a Phoenix application, a context is typically a module that defines functions and uses Ecto for data access. It interacts with one or more schema modules representing the underlying database tables and relationships.
-
-For example, if you are building a blog application, you might have contexts like Blog, Accounts, and Comments. The Blog context would contain functions for managing blog posts, the Accounts context would contain functions for managing users and authentication, and the Comments context would contain functions for managing comments on blog posts.
-
-By grouping related functions and data models into contexts, you make it easier to manage the complexity of your application, improve maintainability, and provide a clear structure for future development.
-
----
-
-2. Create the necessary functions in the `Forums` context to perform CRUD operations on topics and replies.
+### 6. Router Configuration
 
 ```elixir
-defmodule ElxrBB.Forums do
-  alias ElxrBB.Forums.{Topic, Reply}
-  alias ElxrBB.Repo
+scope "/", ElxrBBWeb do
+  pipe_through :browser
 
-  # Topic functions
-  def list_topics, do: Repo.all(Topic)
+  # Forum routes
+  live "/forums", ForumLive.Index, :index
+  live "/forums/new", ForumLive.Index, :new
+  live "/forums/:id/edit", ForumLive.Index, :edit
+  live "/forums/:id", ForumLive.Show, :show
+  live "/forums/:id/show/edit", ForumLive.Show, :edit
 
-  def get_topic!(id), do: Repo.get!(Topic, id)
+  # Topic routes
+  live "/topics", TopicLive.Index, :index
+  live "/topics/new", TopicLive.Index, :new
+  live "/topics/:id/edit", TopicLive.Index, :edit
+  live "/topics/:id", TopicLive.Show, :show
+  live "/topics/:id/show/edit", TopicLive.Show, :edit
 
-  def create_topic(attrs, user) do
-    %Topic{}
-    |> Topic.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:user, user)
-    |> Repo.insert()
-  end
-
-  def update_topic(topic, attrs) do
-    topic
-    |> Topic.changeset(attrs)
-    |> Repo.update()
-  end
-
-  def delete_topic(topic), do: Repo.delete(topic)
-
-  # Reply functions
-  def list_replies, do: Repo.all(Reply)
-
-  def get_reply!(id), do: Repo.get!(Reply, id)
-
-  def create_reply(attrs, topic, user) do
-    %Reply{}
-    |> Reply.changeset(attrs)
-    |> Ecto.Changeset.put_assoc(:topic, topic)
-    |> Ecto.Changeset.put_assoc(:user, user)
-    |> Repo.insert()
-  end
-
-  def update_reply(reply, attrs) do
-    reply
-    |> Reply.changeset(attrs)
-    |> Repo.update()
-  end
-
-  def delete_reply(reply), do: Repo.delete(reply)
+  # Reply routes
+  live "/replies", ReplyLive.Index, :index
+  live "/replies/new", ReplyLive.Index, :new
+  live "/replies/:id/edit", ReplyLive.Index, :edit
+  live "/replies/:id", ReplyLive.Show, :show
+  live "/replies/:id/show/edit", ReplyLive.Show, :edit
 end
 ```
 
-3. Create the necessary controller actions and views to handle topics and replies.
+### 7. User Interface
 
-To create the necessary controller actions and views using .heex templates, you'll need to create the corresponding controllers and templates for topics and replies. I'll provide a brief outline of the necessary steps.
+The UI will include:
 
-Create a topic_controller.ex in the controllers directory:
+- Forum listing with topic counts
+- Topic listing with reply counts
+- Topic view with threaded replies
+- Forms for creating topics and replies
+- Navigation between forums and topics
 
-```elixir
-defmodule ElxrBBWeb.TopicController do
-  use ElxrBBWeb, :controller
+### 8. User Associations
 
-  alias ElxrBB.Forums
-  alias ElxrBB.Forums.Topic
+- Topics will be associated with users (authors)
+- Replies will be associated with users (authors)
+- Users will be able to edit/delete their own content
+- User information will be displayed with posts
 
-  # Implement your actions here, e.g., index, show, new, create, edit, update, delete
-end
-```
+## Implementation Steps
 
-Create a reply_controller.ex in the controllers directory:
+1. **Generate the contexts and LiveViews**
+2. **Run database migrations**
+3. **Update the router with new routes**
+4. **Customize the LiveView templates**
+5. **Add user associations and permissions**
+6. **Test the basic CRUD operations**
+7. **Add navigation and UI improvements**
 
-```elixir
-defmodule ElxrBBWeb.ReplyController do
-  use ElxrBBWeb, :controller
+## Dependencies
 
-  alias ElxrBB.Forums
-  alias ElxrBB.Forums.Reply
+This lesson builds on:
 
-  # Implement your actions here, e.g., create, update, delete
-end
-```
+- Lesson 1: Phoenix setup and project structure
+- Lesson 2: User authentication system
 
-Create a topic_view.ex in the views directory:
+## Next Lessons
 
-```elixir
-defmodule ElxrBBWeb.TopicView do
-  use ElxrBBWeb, :view
-end
-```
+This lesson provides the foundation for:
 
-Create a reply_view.ex in the views directory:
+- Lesson 4: Threaded replies and voting system
+- Lesson 5: Advanced forum features
+- Lesson 6: User profiles and private messaging
 
-```elixir
-defmodule ElxrBBWeb.ReplyView do
-  use ElxrBBWeb, :view
-end
-```
+## Current Status
 
-Create templates using .heex files in the templates/topic and templates/reply directories. Here's an example for templates/topic/index.
+- [ ] Database schema design
+- [ ] Phoenix generator commands
+- [ ] Database migrations
+- [ ] Context implementation
+- [ ] LiveView implementation
+- [ ] Router configuration
+- [ ] User interface
+- [ ] User associations
+- [ ] Testing and validation
 
-```html
-<section>
-  <h1>Topics</h1>
-  <table>
-    <thead>
-      <tr>
-        <th>Title</th>
-        <th>Content</th>
-      </tr>
-    </thead>
-    <tbody>
-      <%= for topic <- @topics do %>
-        <tr>
-          <td><%= topic.title %></td>
-          <td><%= topic.content %></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
-</section>
-```
+## Notes
 
-Now, you can create the other .heex templates like new, show, edit, etc., for topics, and also create the necessary templates for replies.
-
-
----
-
-Side note, getting this thing to actually produce everything here is like pulling teeth right now. Normally ChatGPT seems gung-ho about producing everything but not today, it seems. 
-
-Also, the structure here seems a bit different than how I it's laid out in my project 🤔
-
-Also, because I think this seems to be trying to get me to do a lot more work than I would like, I started looking at the possible generators for this code and sure enough, I found: `mix phx.gen.html` and `mix phx.gen.live` which seem to create the context, controller, views, etc. for a given HTML or LiveView resource. 
-
-I started a new ChatGPT thread and now we're trying something to the `mix phx.gen.live` commands to see what we can do:
-
-Forum:
-
-`mix phx.gen.live Forums Forum forums title:string description:text`
-
-Topic:
-
-`mix phx.gen.live Forums Topic topics title:string body:text forum_id:references:forums`
-
-Reply:
-
-`mix phx.gen.live Forums Reply replies body:text topic_id:references:topics user_id:references:users`
-
-This feels like it makes a bit more sense from my experience 😅
-
-Of course now I have a bunch of files but have no idea how to update my route and ChatGPT seems to be giving me wrong information 🙄 I think I'm giving up for tonight 
-
----
-
-4. Update the router to add routes for topics and replies.
-
-5. Create the necessary templates to display a list of topics, view a single topic with replies, and create new topics and replies.
-
-After completing this lesson, you'll have a basic forum system where users can create topics and reply to them. In the next lesson, we'll implement more advanced features like upvoting and downvoting, as well as threaded replies.
+- This lesson will use Phoenix LiveView for real-time updates
+- We'll implement proper user permissions and associations
+- The forum structure will be hierarchical: Forums → Topics → Replies
+- All content will be associated with authenticated users
