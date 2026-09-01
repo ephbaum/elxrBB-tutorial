@@ -1,56 +1,60 @@
-# Tutorial Status
+# Status
 
-This document tracks the current status of each tutorial lesson and its corresponding implementation in the application repository.
+## The rule
 
-## Lesson Status
+**A lesson is written after the code it describes is merged and tested in the
+application repository, and not before.**
 
-| Lesson | Title | Status | Application Commit | Notes |
-|--------|-------|--------|-------------------|-------|
-| 1 | Setting Up the Environment | ✅ Complete | Not started | Clean, modern instructions |
-| 2 | User Authentication with Pow | ✅ Complete | Not started | Updated configuration |
-| 3 | Forum Functionality | 🚧 Planned | Not started | Implementation plan ready |
-| 4 | Threaded Replies and Voting | 📋 Planned | Not started | Needs merging with lesson 5 |
-| 5 | Sub-topics | 📋 Planned | Not started | Merge with lesson 4 |
-| 6 | Private Messaging and Profiles | 📋 Planned | Not started | Needs modernization |
+Everything else on this page is bookkeeping for that one rule.
 
-## Status Legend
+## Lessons
 
-- ✅ **Complete** - Lesson is finished and validated
-- 🚧 **Planned** - Implementation plan is ready
-- 📋 **Planned** - Needs work before implementation
-- ❌ **Incomplete** - Not ready for implementation
+| # | Lesson | Code it teaches | State |
+|---|---|---|---|
+| 1 | [Setting up](docs/01-setting-up.md) | `mix.exs`, project layout | written |
+| 2 | [The board and its boundary](docs/02-the-board-and-its-boundary.md) | `ElxrBB.Board`, `Board.Store`, `Board.Store.ETS`, the record modules | written |
+| 3 | [Events across a cluster](docs/03-events-across-a-cluster.md) | `ElxrBB.PubSub`, `ElxrBB.Presence`, `ElxrBB.Counters` | written |
+| 4–6 | Persistence | `Board.Store.Postgres` | code not built |
+| 7–11 | The web layer | Phoenix / LiveView | code not built |
+| 12–16 | Operating it | releases, clustering, moderation | code not built |
 
-## Implementation Progress
+See [`docs/00a-outline.md`](docs/00a-outline.md) for what those later lessons
+are expected to cover.
 
-### Application Repository
-- **Repository**: https://github.com/ephbaum/elxrBB
-- **Current Status**: Fresh start with documentation
-- **Next Step**: Begin Lesson 1 implementation
+## Application
 
-### Tutorial Repository
-- **Repository**: https://github.com/ephbaum/elxrBB-tutorial
-- **Current Status**: Lessons 1-2 cleaned, Lesson 3 planned
-- **Next Step**: Complete remaining lesson plans
+Repository: <https://github.com/ephbaum/elxrBB>
 
-## Validation Process
+| Component | State |
+|---|---|
+| `ElxrBB.Board` — users, forums, topics, posts | done, tested |
+| `ElxrBB.Board.Store` + ETS implementation | done, tested |
+| `ElxrBB.PubSub` — `:pg`-backed cluster events | done, tested across real nodes |
+| `ElxrBB.Presence` — who's online | done, tested across real nodes |
+| `ElxrBB.Counters` — write-hot counters | done, tested under concurrency |
+| `Board.Store.Postgres` | not started |
+| Phoenix / LiveView | not started |
 
-Each lesson will be validated by:
-1. Following the tutorial instructions
-2. Implementing in the application repository
-3. Testing functionality
-4. Updating this status document
-5. Linking to application commits
+118 tests, including multi-node cluster tests that start real peer VMs.
 
-## Historical Context
+## What "written" means for a lesson
 
-- **Original Lessons**: Archived in `docs/archive/original-lessons/`
-- **Original Application**: Archived in `archive/initial-attempt` branch
-- **Project Restart**: January 2025
+1. The code it teaches is merged in the application repository.
+2. The code it teaches has tests, and they pass.
+3. Every snippet in the lesson is either copied from that code or runnable as
+   written.
+4. The lesson links to the file it is describing.
 
-## Next Steps
+A lesson that fails any of those is not "in progress". It is archived, with a
+note saying why. See [`docs/archive/`](docs/archive/).
 
-1. **Implement Lesson 1** - Environment setup
-2. **Implement Lesson 2** - User authentication
-3. **Implement Lesson 3** - Forum functionality
-4. **Update remaining lessons** - Modernize and complete
-5. **Validate all lessons** - Ensure tutorial/application alignment
+## History
+
+- **2023** — original attempt, written with GPT-4. Six lessons, a Phoenix
+  skeleton, and no agreement between them. Archived at
+  `docs/archive/original-lessons/`.
+- **2025-10** — restart. Three lessons rewritten, application reset to a
+  README. The lessons still described software nobody had built. Archived at
+  `docs/archive/restart-2025/`.
+- **2026-09** — this reset. Application rebuilt from the domain outward; the
+  first three lessons written against code that exists.

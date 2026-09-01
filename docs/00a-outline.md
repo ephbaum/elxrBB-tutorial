@@ -1,107 +1,78 @@
 # elxrBB Tutorial Series Outline
 
-## Introduction
-- Overview of elxrBB
-- Introducing Elixir and Phoenix
-- System Requirements and Setup
+## How this outline differs from the last one
 
-## Lesson 1: Setting Up the Elixir and Phoenix Environment
-- Installing Elixir
-- Installing Phoenix
-- Creating a new Phoenix project
+The previous outline had sixteen lessons and two appendices. It was written
+before any code existed, it put "Integrating Real-Time Updates" at lesson 11
+and "Writing Tests" at lesson 14, and it never mentioned running the
+application on more than one machine. It is preserved at
+`archive/original-lessons/`.
 
-## Lesson 2: User Authentication with Pow
-- Adding Pow to your project
-- Configuring Pow for email-based authentication
-- Customizing user registration with a random username
-- Testing user authentication
+This one is ordered by **what the board actually needs, hardest problem
+first**, and it only lists a lesson as written once the code it teaches is
+merged and tested in the application repository.
 
-## Lesson 3: Implementing Basic Forum Functionality
-- Creating a new context for forums
-- Defining the Topic and Reply schemas
-- CRUD operations for topics and replies
-- Updating the router, controller, and views
-- Creating templates for topics and replies
+The reordering is not cosmetic. Real-time updates and presence are not a
+feature you bolt on at lesson 11; they are the reason to build a bulletin board
+in Elixir at all. Tests are not lesson 14; they are how you find out whether
+the distributed thing you wrote is distributed.
 
-## Lesson 4: Implementing Threaded Replies and Upvoting/Downvoting
-- Adding threaded replies to topics
-- Creating upvote and downvote functionality
-- Updating the UI to display threaded replies and votes
+## Part I — The core
 
-## Lesson 5: Implementing Sub-Topics and Displaying Sub-Topic Counts
-- Adding sub-topic functionality to threaded replies
-- Updating the UI to display sub-topic counts
-- Providing a view for sub-topics
+Everything in Part I is dependency-free OTP. No framework, no database, no
+containers. You can run all of it with nothing but Elixir installed.
 
-## Lesson 6: Adding Private Messaging and User Profiles
-- Implementing private messaging between users
-- Creating user profiles with biographies and preferred names
-- Implementing an avatar system with file uploads
-- Configuring file storage with Digital Ocean Block Storage
+| # | Lesson | State |
+|---|---|---|
+| 1 | [Setting up](01-setting-up.md) — Elixir, and a project with no dependencies | written |
+| 2 | [The board and its boundary](02-the-board-and-its-boundary.md) — records, validation, and a store you can swap | written |
+| 3 | [Events across a cluster](03-events-across-a-cluster.md) — `:pg`, presence, and hot counters | written |
 
-## Lesson 7: Implementing User Roles and a VIP Section
-- Defining user roles and permissions
-- Creating a VIP section for pro users
-- Implementing subscription-based access
-- Configuring payment processing
+## Part II — Persistence
 
-## Lesson 8: Adding Media Upload Capabilities and Post Formatting Options
-- Implementing image uploads for posts
-- Adding post formatting options: Markdown, BBCode, and WYSIWYG editor
-- Updating the UI to display formatted posts
+| # | Lesson | State |
+|---|---|---|
+| 4 | The Postgres store — implementing the same behaviour against a real database | not written; code not built |
+| 5 | Migrations, indexes, and the queries a forum index actually runs | not written; code not built |
+| 6 | Flushing counters through to storage without blocking a page render | not written; code not built |
 
-## Lesson 9: Implementing User Audit Trails and Admin Features
-- Creating a user audit trail
-- Handling post edits and deletions by moderators
-- Implementing soft deletes and flagging
-- Creating an admin dashboard
+## Part III — The web layer
 
-## Lesson 10: Adding a Notification System
-- Implementing email notifications
-- Integrating browser notifications
-- Configuring SMS/Voice notifications with Twilio for Pro Users
+| # | Lesson | State |
+|---|---|---|
+| 7 | Phoenix as a delivery layer — adding it to a domain that already works | not written; code not built |
+| 8 | The forum index and the topic view in LiveView | not written; code not built |
+| 9 | Posting, editing, and optimistic updates | not written; code not built |
+| 10 | "Who's online", wired to the presence server from lesson 3 | not written; code not built |
+| 11 | Authentication, and why `User` has no password on it | not written; code not built |
 
-## Lesson 11: Integrating Real-Time Updates with Phoenix Channels
-- Overview of Phoenix Channels
-- Setting up channels for topics and replies
-- Implementing real-time updates in the UI
+## Part IV — Operating it
 
-## Lesson 12: Populating the Animal Names Database and Integrating with JavaScript
-- Creating the database table for animal names
-- Importing animal names from an external source
-- Integrating with JavaScript to provide random animal names
+| # | Lesson | State |
+|---|---|---|
+| 12 | Clustering in production — discovery, and what `:pg` gives you for free | not written; code not built |
+| 13 | Moderation: soft deletes, locking, and an audit trail | not written; code not built |
+| 14 | Notifications, built on the event stream you already have | not written; code not built |
+| 15 | Deploying a clustered release | not written; code not built |
+| 16 | Accessibility, and why a forum is a good place to get it right | not written; code not built |
 
-## Lesson 13: Implementing Accessible Design (a11y)
-- Overview of accessibility in web applications
-- Best practices for accessible design in elxrBB
-- Implementing and testing accessibility features
+## Ideas that are not lessons yet
 
-## Lesson 14: Writing Tests for Your Application
-- Introduction to testing in Elixir and Phoenix
-- Writing tests for elxrBB's main features
-- Running tests and interpreting test results
+Kept here rather than promoted into the table, because nobody has built them:
 
-## Lesson 15: Deploying Your elxrBB Application
-- Preparing your application for deployment
-- Deploying elxrBB to a server or cloud platform
-- Configuring the production environment and ensuring security
+- Search — full-text over posts, and whether it belongs in Postgres or beside it
+- Attachments and media
+- Rate limiting and spam defence, which on the BEAM is a per-user process problem
+- Federation, which is the interesting version of "sub-topics"
+- Upvotes and downvotes, which are a counter problem and mostly a moderation
+  policy problem
 
-## Lesson 16: Customizing and Extending elxrBB
-- Overview of customization options for elxrBB
-- Implementing custom features and extensions
-- Contributing to the elxrBB open-source project
+## The rule
 
-## Conclusion
-- Reviewing what you've learned
-- Exploring additional resources and further learning
-- Final thoughts on building a complete web application with Elixir and Phoenix
+**A lesson is written after the code it describes is merged and tested.**
 
-## Appendix A: Implementing an Event-Driven Architecture (Optional)
-- Overview of event-driven architecture
-- Refactoring the application to use events
-- Implementing event handlers and subscribers
-
-## Appendix B: Object-Oriented vs. Functional Programming (Optional)
-- Overview of object-oriented and functional programming paradigms
-- Comparing the two approaches
-- Understanding the advantages and disadvantages of each paradigm
+Three times now this project has produced a confident outline for software that
+did not exist, and each time the outline aged into fiction. The table above
+says "not written; code not built" instead of a completion percentage because
+that is the true state, and because a plan that admits what it has not done is
+worth more than one that does not.

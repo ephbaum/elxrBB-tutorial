@@ -1,43 +1,101 @@
 # elxrBB-tutorial
 
-A (an ambitious) collaborative effort with ChatGPT (GPT-4) to create a tutorial for, and open source, a forum web application
+Building a phpBB-style bulletin board in Elixir — and using it as an excuse to
+learn what the BEAM is actually for.
 
-## What?
+## Where this stands
 
-This repo is the result of a recent conversation with [ChatGPT](https://help.openai.com/en/collections/3742473-chatgpt) ([GPT4](https://openai.com/research/gpt-4)). The clever little chatbot suggested in true ChatGPT Dunning-Kruger style, and I figured 🤷‍♂️, okay, maybe we can build a real tutorial from this conversation
+Part I of the tutorial is written, and the code it teaches is
+[merged and tested](https://github.com/ephbaum/elxrBB):
 
-Essentially, I asked ChatGPT about how to build a forum web app using Elixir and Phoenix
+| # | Lesson | |
+|---|---|---|
+| 1 | [Setting up](docs/01-setting-up.md) | Elixir, and a project with no dependencies |
+| 2 | [The board and its boundary](docs/02-the-board-and-its-boundary.md) | records, validation, and a store you can swap |
+| 3 | [Events across a cluster](docs/03-events-across-a-cluster.md) | `:pg`, presence, and hot counters |
 
-## Why?
+Start with the [introduction](docs/00b-introduction.md), or read the
+[full outline](docs/00a-outline.md) for what Parts II–IV are meant to cover.
+Thirteen of the sixteen lessons are marked "not written; code not built",
+because they are.
 
-The conversation around ChatGPT right now is wild. There's a lot of [doomers](https://www.reuters.com/technology/musk-experts-urge-pause-training-ai-systems-that-can-outperform-gpt-4-2023-03-29/) out there, [some moreso](https://time.com/6266923/ai-eliezer-yudkowsky-open-letter-not-enough/) than [others](https://astralcodexten.substack.com/p/why-i-am-not-as-much-of-a-doomer).
+**The rule this repository runs on:** a lesson is written after the code it
+describes is merged and tested, and not before. See [STATUS.md](STATUS.md).
 
-A [recent toot](https://hachyderm.io/@aburka/110098164435536382) on hachyderm.io seems to suggest another point of view:
+## Why that rule exists
 
-> Updating a classic:
-> Some people, when presented with a problem, think "I'll use ChatGPT to solve this problem!"
-> Now they have two problems. 
+This is the third attempt at this project. The first two both produced
+confident, well-formatted lessons about software that did not exist.
 
-- [@durka](https://github.com/durka)
+### 2023 — the original
 
-This intance I'm working with keeps forgetting things, and I've spotted plenty of issues with its code as we've gone along so far, but this feels like a good opportunity to try to learn how to work with a LLM to accomplish larger projects
+The README at the time is worth quoting, because it was right:
 
-I harbor no illusions that this will be successful. I'm sure some, if not most, of its code is crap, maybe even already outdated
+> This repo is the result of a recent conversation with ChatGPT (GPT-4). The
+> clever little chatbot suggested in true ChatGPT Dunning-Kruger style, and I
+> figured 🤷‍♂️, okay, maybe we can build a real tutorial from this conversation
+>
+> [...]
+>
+> This instance I'm working with keeps forgetting things, and I've spotted
+> plenty of issues with its code as we've gone along so far, but this feels
+> like a good opportunity to try to learn how to work with a LLM to accomplish
+> larger projects
+>
+> I harbor no illusions that this will be successful. I'm sure some, if not
+> most, of its code is crap, maybe even already outdated
+>
+> [...]
+>
+> I make no warranty. This is a work in progress and I have no idea what I'm
+> doing (probably). ChatGPT and I seem to be having a pretty productive
+> conversation, but this may all be made up bullshit. Do not rely on it until
+> this document suggests otherwise.
 
-There is something amazing about working with an always-there (except when you hit the 25 message cap) knowledge partner that is omniscient (presenting). 
+It was made up. Six lessons were written; a Phoenix skeleton and some
+`mix phx.gen.live` output were committed; the two never met. The model produced
+a sixteen-lesson outline before a line of code existed, and everything
+downstream inherited that confidence.
 
-ChatGPT is a hell of a "yes-man" and has a pretty wide array of knowledge to draw from-
+Preserved at [`docs/archive/original-lessons/`](docs/archive/original-lessons/).
 
-## How?
+### 2025 — the restart
 
-I am just working with ChatGPT to build both this tutorial and the application
+Three lessons were cleaned up and the application repository was reset to a
+README. The prose improved. The lessons still described an application nobody
+had built — one of them says "INCOMPLETE - PLANNED" in its own title.
 
-I intend to opensource the final product (should one be built, I definitely harbor no illusions about my ability to focus on this, nor my skill level with Elixir, that it will actually get done)
+Preserved at [`docs/archive/restart-2025/`](docs/archive/restart-2025/).
 
-I do hope some folks might [contribute]() in the future, maybe even some folks with actual Elixir experience will be willing to vet the project
+### 2026 — this one
 
-Or maybe it will be another repo gathering dust :shrug:
+The application was rebuilt starting from the domain rather than the framework:
+forums, topics and threaded replies; a persistence boundary; cluster-wide
+events on `:pg`; who's-online presence replicated across nodes; write-hot
+counters kept out of the database. 118 tests, including multi-node tests that
+start real peer VMs and prove the distributed claims.
 
-## Important Note
+Then, and only then, the first three lessons.
 
-I make no warranty. This is a work in progress and I have no idea what I'm doing (probably). ChatGPT and I seem to be having a pretty productive conversation, but this may all be made up bullshit. Do not rely on it until this document suggests otherwise. 
+## The premise
+
+A bulletin board is a good excuse to use Elixir and a bad excuse to use most
+other things. Almost everything a busy board does is a concurrency problem
+wearing a CRUD costume — who's online, view counts, "someone replied while you
+were reading", surviving a bad deploy. phpBB solved all four with a table, a
+cron job, a page refresh, and hope. The BEAM has better primitives for each.
+
+The tutorial is organised around those problems rather than around a
+framework's directory layout, which is why real-time and clustering are in
+Part I rather than at lesson 11.
+
+## Contributing
+
+Contributions are welcome, especially from people with real Elixir experience
+who want to tell us we are wrong about something. The one thing that will be
+turned down is a lesson for code that has not been written.
+
+## Licence
+
+GPL-3.0. The application lives at
+[ephbaum/elxrBB](https://github.com/ephbaum/elxrBB).

@@ -18,7 +18,7 @@ These lessons were created in collaboration with ChatGPT (GPT-4) and represent a
 
 ## What You'll Find
 
-### Original Lessons (01-06)
+### Original lessons (01-06)
 - **Lesson 1**: Setting up the environment (with extensive debugging notes)
 - **Lesson 2**: User authentication with Pow (with configuration issues)
 - **Lesson 3**: Forum functionality (incomplete implementation)
@@ -41,12 +41,16 @@ The original lessons were archived because:
 3. They contain too much debugging narrative
 4. They're incomplete and confusing for learners
 
-## Current Status
+## What is in here
 
-The cleaned-up and modernized lessons are now in the main `docs/` directory:
-- `01-setting-up.md` - Modern Phoenix setup instructions
-- `02-user-authentication.md` - Clean Pow configuration
-- `03-forum-functionality.md` - Planned implementation
+- `original-lessons/` - the six 2023 lessons written with GPT-4
+- `restart-2025/` - the three 2025 rewrites, which were cleaner and described
+  an application that still did not exist
+
+The 2025 rewrites were archived alongside the originals in September 2026 for
+the same reason the originals were: no code. The lessons in the main `docs/`
+directory are written against code that is merged and tested in the
+application repository. See `../../STATUS.md`.
 
 ## Learning Value
 

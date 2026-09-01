@@ -1,205 +1,133 @@
-# Lesson 1: Setting Up the Environment and Creating the elxrBB Project
+# Lesson 1: Setting up
 
-## Overview
+## What you need
 
-In this lesson, we'll set up a modern Elixir and Phoenix development environment and create the elxrBB forum application. We'll use the latest stable versions and best practices.
+Elixir 1.14 or newer, which brings Erlang/OTP with it. That is the whole list.
 
-## Prerequisites
-
-- Basic familiarity with command line
-- Git installed
-- A text editor or IDE (VS Code recommended)
-
-## Setting Up the Development Environment
+No PostgreSQL. No Docker. No Node. No Phoenix. Part I of this tutorial builds
+the board's core, and the core has no dependencies — not as a stunt, but
+because a domain you can run with nothing installed is a domain you will
+actually run.
 
 ### Install Elixir
 
-Visit the official Elixir installation page: https://elixir-lang.org/install.html
+Follow <https://elixir-lang.org/install.html> for your platform. A version
+manager is worth it if you work on more than one Elixir project; `mise` and
+`asdf` both work well. On Debian or Ubuntu, `apt install elixir` is enough to
+follow along.
 
-**Recommended approach using asdf (version manager):**
+Check it:
 
-```bash
-# Install asdf (if not already installed)
-git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
+```console
+$ elixir --version
+Erlang/OTP 25 [erts-13.2.2.5] [source] [64-bit] [smp:4:4] [jit:ns]
 
-# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
-echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
-echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
-
-# Reload your shell
-source ~/.bashrc
-
-# Install Erlang and Elixir
-asdf plugin add erlang
-asdf plugin add elixir
-asdf install erlang latest
-asdf install elixir latest
-asdf global erlang latest
-asdf global elixir latest
+Elixir 1.14.0 (compiled with Erlang/OTP 24)
 ```
 
-**Verify installation:**
+Any Elixir 1.14+ on any OTP 24+ will do.
 
-```bash
-elixir --version
-# Should show Elixir 1.15+ and Erlang/OTP 26+
+## The project
+
+```console
+$ mix new elxrbb --sup
+$ cd elxrbb
 ```
 
-### Install Phoenix
+`--sup` gives you a supervision tree. It is the only flag that matters here:
+everything in Part I is a supervised process, and the tree is where they get
+started and where they get restarted when something goes wrong.
 
-```bash
-# Install Hex package manager
-mix local.hex
-
-# Install Phoenix project generator
-mix archive.install hex phx_new
-```
-
-### Install PostgreSQL
-
-**Ubuntu/Debian:**
-
-```bash
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-```
-
-**macOS (with Homebrew):**
-
-```bash
-brew install postgresql
-brew services start postgresql
-```
-
-**Windows:**
-Download and install from: https://www.postgresql.org/download/windows/
-
-### Install Node.js
-
-**Using asdf (recommended):**
-
-```bash
-asdf plugin add nodejs
-asdf install nodejs latest
-asdf global nodejs latest
-```
-
-**Or download from:** https://nodejs.org/
-
-## Creating the elxrBB Project
-
-### Generate a New Phoenix Project
-
-```bash
-# Create the project with LiveView and PostgreSQL
-mix phx.new elxrBB --live --database postgres
-
-# Navigate to the project directory
-cd elxrBB
-```
-
-### Configure the Database
-
-The project generator creates a `config/dev.exs` file with default PostgreSQL settings. Update it if needed:
+Open `mix.exs`. The interesting part is what is *not* in it:
 
 ```elixir
-# config/dev.exs
-config :elxrBB, ElxrBB.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "elxrbb_dev",
-  hostname: "localhost",
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+# The core is deliberately dependency-free: everything here is OTP.
+# The web layer (Phoenix/LiveView) is a separate application that depends
+# on this one -- see ARCHITECTURE.md.
+defp deps do
+  []
+end
 ```
 
-### Create the Database
+That comment is load-bearing, so it is worth being explicit about the claim.
 
-```bash
-# Create the development database
-mix ecto.create
+## Why start with no dependencies
 
-# Run any existing migrations
-mix ecto.migrate
+Three reasons, in order of how much they matter.
+
+**Because the domain should be testable without infrastructure.** By the end of
+lesson 3 the board has 118 tests that run in about a second, needing no
+database, no broker and no containers. That is the difference between a suite
+that gets run on every save and one that gets skipped.
+
+**Because `:pg` and ETS are the right tools here, not fallbacks.**
+`Phoenix.PubSub` is an excellent library, and it sits on top of the same OTP
+facilities we are about to use directly. Using them directly makes the
+mechanism visible — which is the point of a tutorial, and which is also how you
+end up able to debug the library later.
+
+**Because Phoenix is a delivery layer, and the code should say so.** Adding
+Phoenix changes what the board can *serve*, not what it *means*. Both previous
+attempts at this project started with `mix phx.new` and ended up with the
+framework as the application: rules living in generated LiveViews, LiveViews
+calling `Repo` directly, and nothing in between to test.
+
+## The aliases worth adding
+
+```elixir
+defp aliases do
+  [
+    check: ["format --check-formatted", "compile --warnings-as-errors", "test"]
+  ]
+end
 ```
 
-### Install Dependencies and Build Assets
+`mix check` is the thing you run before you commit. Warnings-as-errors matters
+more in Elixir than in most languages, because the compiler catches genuinely
+useful mistakes — an unmatched clause, a typo'd function name, a
+pattern that can never match — and a project that tolerates warnings stops
+reading them.
 
-```bash
-# Install Elixir dependencies
-mix deps.get
+## Directory layout
 
-# Install and build frontend assets
-mix assets.setup
-mix assets.build
-```
-
-### Start the Development Server
-
-```bash
-# Start the Phoenix server
-mix phx.server
-```
-
-Visit [http://localhost:4000](http://localhost:4000) in your browser. You should see the default Phoenix welcome page.
-
-## Project Structure Overview
-
-Your new Phoenix project has the following structure:
+By the end of Part I:
 
 ```
-elxrBB/
-├── assets/                 # Frontend assets (CSS, JS)
-├── config/                 # Configuration files
-├── lib/
-│   ├── elxrBB/            # Business logic (contexts)
-│   ├── elxrBB_web/        # Web interface (controllers, views, templates)
-│   └── elxrBB.ex          # Main application module
-├── priv/
-│   ├── repo/              # Database migrations and seeds
-│   └── static/            # Static assets
-├── test/                  # Test files
-├── mix.exs                # Project dependencies
-└── README.md
+lib/elxrbb/
+  application.ex          the supervision tree
+  board.ex                the public API: users, forums, topics, posts
+  board/
+    schema.ex             validation helpers
+    slug.ex               URL slugs
+    user.ex forum.ex topic.ex post.ex     the records
+    store.ex              the persistence behaviour
+    store/ets.ex          an in-memory implementation
+  pubsub.ex               cluster-wide events, on :pg
+  presence.ex             who's online
+  presence/state.ex       the replicated data structure behind it
+  counters.ex             view counts and post counts
 ```
 
-## Key Phoenix Concepts
+Two things about that layout are worth noticing now, because they are choices
+rather than convention.
 
-- **Contexts**: Business logic modules (e.g., `ElxrBB.Users`, `ElxrBB.Forums`)
-- **Controllers**: Handle HTTP requests
-- **Views**: Render responses (HTML, JSON)
-- **Templates**: HTML templates (using HEEx)
-- **LiveView**: Real-time, interactive web interfaces
-- **Ecto**: Database wrapper and query builder
+`board/store.ex` is a **behaviour**, not a module that talks to a database. The
+domain never touches a table. Lesson 2 is largely about why.
 
-## Troubleshooting
+`presence/state.ex` is **pure** — no processes, no messages, no side effects.
+The GenServer in `presence.ex` owns the process and the monitors; everything
+that decides *what the cluster believes* lives in the pure module and is tested
+without starting anything. Lesson 3 is largely about why.
 
-### Common Issues
+## Check it runs
 
-**Database connection errors:**
+```console
+$ mix check
+```
 
-- Ensure PostgreSQL is running
-- Check username/password in `config/dev.exs`
-- Verify database exists: `mix ecto.create`
+An empty project passes. It will keep passing for the rest of Part I, which is
+the point of running it now.
 
-**Asset build errors:**
+---
 
-- Ensure Node.js is installed
-- Run `mix assets.setup` to install frontend dependencies
-
-**Port already in use:**
-
-- Change the port in `config/dev.exs` or kill the process using port 4000
-
-## Next Steps
-
-In the next lesson, we'll implement user authentication using the Pow library, which provides a robust, production-ready authentication system.
-
-## Additional Resources
-
-- [Phoenix Documentation](https://hexdocs.pm/phoenix/overview.html)
-- [Elixir Documentation](https://hexdocs.pm/elixir/Kernel.html)
-- [Ecto Documentation](https://hexdocs.pm/ecto/Ecto.html)
-- [LiveView Documentation](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)
+Next: [Lesson 2 — The board and its boundary](02-the-board-and-its-boundary.md)

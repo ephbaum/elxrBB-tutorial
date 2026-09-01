@@ -1,52 +1,95 @@
-# Introduction to the Forum Application and System Overview
+# Introduction
 
-## Introduction
+## What we are building
 
-Welcome to the elxrBB forum application tutorial! In this series of lessons, we will guide you through the process of building a complete forum application called elxrBB using Elixir and the Phoenix Framework. This tutorial is designed for learners with basic programming knowledge but little to no experience in implementing full systems. By following this tutorial, you will not only learn how to build elxrBB from scratch but also understand important concepts and techniques related to web application development.
+elxrBB is a bulletin board — the phpBB shape. Forums holding topics, topics
+holding threaded replies, a list of who is online at the bottom of the index,
+view counts, moderation.
 
-Alongside this tutorial, we will be building a reference app as an open-source solution that anyone can use as-is or as a starting point for their own customizations.
+That is a deliberately old-fashioned thing to build, and it is a very good
+excuse to learn Elixir, because almost everything a busy board does is a
+concurrency problem wearing a CRUD costume:
 
-## elxrBB Features
+- **Who's online** is soft, per-connection state that should vanish the moment
+  a connection does. phpBB kept it in a table and ran a cron job to clean it
+  up. Elixir has processes that die, and monitors that tell you.
+- **View counts** are the hottest writes in the system and the least important
+  numbers on the page. phpBB ran `UPDATE topics SET views = views + 1` on every
+  page load, contending on exactly the rows people were looking at.
+- **"Someone replied while you were reading"** is a push. phpBB made you hit
+  refresh.
+- **A board that survives a bad deploy** wants a failure to be local to one
+  request rather than fatal to the process serving everyone. This is the thing
+  the BEAM is actually for.
 
-Our elxrBB forum application will include a variety of features that are commonly found in online discussion platforms:
+So the tutorial is organised around those problems rather than around a
+framework's directory layout.
 
-1. User authentication and registration with email verification.
-2. Publicly accessible discussion threads organized by topics.
-3. Threaded replies and support for subtopics.
-4. Real-time updates for all clients via a pub/sub architecture.
-5. Upvote and downvote functionality for topics.
-6. User profiles with avatars, biographies, and preferred names.
-7. Private messaging between users.
-8. User roles and a subscription system for "pro users."
-9. Media upload capabilities and support for different text formatting options (Markdown, BBCode, and WYSIWYG).
-10. User audit trails and post management for moderators and administrators.
-11. Notifications via email, browser notifications, and SMS/voice for pro users.
+## What you need to know already
 
-## System Components and Their Interactions
+Some programming, in any language. You do not need Elixir. You do not need
+functional programming. You do not need to have run a server.
 
-The elxrBB application will consist of the following main components:
+You *will* need to be comfortable being told that a thing you already know how
+to do — increment a counter, keep a session, notify a client — has a different
+and better answer here, and to sit with the new answer long enough to see why.
 
-1. Frontend: The user interface of the application, built using HTML, CSS, and JavaScript.
-2. Backend: The server-side logic, implemented in Elixir using the Phoenix Framework.
-3. Database: A database system to store and manage the application's data, such as PostgreSQL.
+## How the two repositories fit together
 
-These components will interact with each other to provide a seamless user experience:
+- **[elxrBB](https://github.com/ephbaum/elxrBB)** — the application. Every
+  lesson corresponds to code that is merged and tested there.
+- **[elxrBB-tutorial](https://github.com/ephbaum/elxrBB-tutorial)** — this
+  repository, the lessons.
 
-- Users interact with the frontend, which sends requests to the backend for processing.
-- The backend handles the requests, communicates with the database, and returns appropriate responses to the frontend.
-- The frontend updates the user interface based on the responses received from the backend.
+They have not always agreed. See [the honest version of this project's
+history](#a-note-on-the-history) below.
 
-## Technologies and Frameworks Used
+## What we build in Part I, and what we leave out
 
-In this tutorial, we will use the following technologies and frameworks to build elxrBB:
+Part I builds the whole board *except* the web and the database:
 
-1. Elixir: A functional, concurrent, and general-purpose programming language.
-2. Phoenix Framework: A productive web framework for Elixir that enables high-performance and maintainable applications.
-3. PostgreSQL: A powerful, open-source, object-relational database system.
-4. HTML, CSS, and JavaScript: The core technologies for building web pages and user interfaces.
-5. LiveView: A Phoenix library for building real-time, interactive web applications without writing JavaScript.
-6. [Additional libraries, tools, and services as needed throughout the tutorial]
+```
+ElxrBB.Board      users, forums, topics, threaded replies, moderation
+ElxrBB.PubSub     cluster-wide events, on :pg
+ElxrBB.Presence   who's online, replicated across nodes
+ElxrBB.Counters   view counts, kept out of the database
+ElxrBB.Board.Store  a persistence boundary, with an in-memory implementation
+```
 
-By using these technologies and frameworks, we will be able to create a robust and scalable forum application, elxrBB, that meets the needs of modern web users.
+No Phoenix. No PostgreSQL. No Docker. Not because those are bad — Part II and
+Part III add two of the three — but because putting them first is how this
+project failed twice.
 
-In the upcoming lessons, we will dive deeper into each component and feature, guiding you through the process of building elxrBB from start to finish. Let's get started!
+When the framework comes first, it becomes the application. The rules end up
+inside generated LiveViews, the LiveViews call `Repo` directly, and there is no
+seam left to test at, cache at, or reason about. You cannot run the domain
+without a database because there is no domain, only controllers.
+
+Starting from the middle instead means that by the end of lesson 3 you have a
+board you can drive from `iex`, a test suite that runs in under a second with
+nothing installed, and multi-node tests that prove the distributed claims. Then
+Phoenix is a delivery layer, which is what it is good at.
+
+## A note on the history
+
+This is the third attempt at this project.
+
+The first, in 2023, was written in conversation with GPT-4. The model produced
+a confident sixteen-lesson outline, then lessons for code it had not written,
+then code that did not match the lessons. The repository ended up with a
+Phoenix skeleton, some generator output, and six lessons describing a different
+application. The README at the time said, accurately, "this may all be made up
+bullshit."
+
+The second, in 2025, cleaned up three of those lessons and reset the
+application repository to a README. The lessons were better written and still
+described software nobody had built.
+
+The third is this one. The rule it runs on is in
+[`STATUS.md`](../STATUS.md): a lesson is written after the code it describes is
+merged and tested, and not before. That is why this outline has three written
+lessons and thirteen honestly marked "not built", rather than sixteen
+plausible-looking chapters.
+
+The earlier lessons are kept in `docs/archive/`. They are worth a read, in the
+way that a post-mortem is worth a read.
