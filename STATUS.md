@@ -35,7 +35,12 @@ Repository: <https://github.com/ephbaum/elxrBB>
 | `Board.Store.Postgres` | not started |
 | Phoenix / LiveView | not started |
 
-118 tests, including multi-node cluster tests that start real peer VMs.
+120 tests, including multi-node cluster tests that start real peer VMs.
+
+Toolchain: Elixir 1.20.4 on Erlang/OTP 28.5.0.5, pinned in the application's
+`.tool-versions`. The core was first written against Elixir 1.14 / OTP 25 and
+moved forward before Part I was published — a tutorial that tells readers to
+install current Elixir has to have been run on it.
 
 ## What "written" means for a lesson
 

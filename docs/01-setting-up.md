@@ -2,7 +2,7 @@
 
 ## What you need
 
-Elixir 1.14 or newer, which brings Erlang/OTP with it. That is the whole list.
+Elixir 1.20 on Erlang/OTP 28. That is the whole list.
 
 No PostgreSQL. No Docker. No Node. No Phoenix. Part I of this tutorial builds
 the board's core, and the core has no dependencies — not as a stunt, but
@@ -11,21 +11,51 @@ actually run.
 
 ### Install Elixir
 
-Follow <https://elixir-lang.org/install.html> for your platform. A version
-manager is worth it if you work on more than one Elixir project; `mise` and
-`asdf` both work well. On Debian or Ubuntu, `apt install elixir` is enough to
-follow along.
+Follow <https://elixir-lang.org/install.html> for your platform.
+
+**Use a version manager** — `mise` or `asdf` — rather than your system package
+manager. Distribution packages lag badly: Ubuntu 24.04 ships Elixir 1.14 and
+OTP 25, both from 2022, and OTP 25 no longer receives security patches. This
+project is pinned in `.tool-versions`, so a version manager will pick the right
+pair up on its own:
+
+```console
+$ mise install          # or: asdf install
+```
 
 Check it:
 
 ```console
 $ elixir --version
-Erlang/OTP 25 [erts-13.2.2.5] [source] [64-bit] [smp:4:4] [jit:ns]
+Erlang/OTP 28 [erts-16.5] [source] [64-bit] [jit:ns]
 
-Elixir 1.14.0 (compiled with Erlang/OTP 24)
+Elixir 1.20.4 (compiled with Erlang/OTP 28)
 ```
 
-Any Elixir 1.14+ on any OTP 24+ will do.
+Elixir 1.20 requires OTP 27 or newer. The code in this tutorial is written and
+tested against 1.20 on OTP 28; `mix.exs` says so rather than claiming a wider
+range nobody has run.
+
+### A word about the type checker
+
+Elixir 1.19 and 1.20 added gradual type checking: the compiler now infers types
+for your functions and reports genuine contradictions — a call that can never
+match, a value that cannot be what the next function needs.
+
+Moving this project from Elixir 1.14 to 1.20 turned up exactly two complaints,
+and both were worth having:
+
+- `@type record :: ...` in the store behaviour shadowed a built-in type name.
+  A naming bug, caught for free. It is `entity` now.
+- A test asserted `Board.forum_topic(1) != Board.topic_topic(1)`. Those are
+  `{:forum, _}` and `{:topic, _}` — disjoint types, so the comparison could
+  never be false. A test that cannot fail, sitting there passing. It has been
+  replaced with one that subscribes to a forum and broadcasts on a topic with
+  the same id, which is what the assertion was reaching for.
+
+Neither was a crash waiting to happen. Both were things a careful reviewer
+should have caught and did not. That is a fair description of what this
+checker is for.
 
 ## The project
 

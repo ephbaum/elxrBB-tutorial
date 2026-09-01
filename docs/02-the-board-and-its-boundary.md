@@ -57,10 +57,48 @@ Errors come back as a keyword list — `{:error, [username: "is required"]}` —
 a form can render them next to fields without translating anything.
 
 This is not a rebuild of Ecto and it must not become one. `ElxrBB.Board.Schema`
-is 90 lines and implements four rules: required, length, format, inclusion.
-When the Postgres store lands, Ecto comes with it for queries and migrations —
-and these rules stay exactly where they are, so they keep applying no matter
-which store is underneath.
+is about a hundred lines and implements four rules: required, length, format,
+inclusion. When the Postgres store lands, Ecto comes with it for queries and
+migrations — and these rules stay exactly where they are, so they keep applying
+no matter which store is underneath.
+
+### One decision inside `Schema` worth arguing about
+
+A web form sends string keys. Something has to turn `%{"username" => "ada"}`
+into `%{username: "ada"}`, and the obvious version has a trap in it:
+
+```elixir
+# Don't do this.
+defp safe_atom(key) do
+  String.to_existing_atom(key)
+rescue
+  ArgumentError -> key
+end
+```
+
+`String.to_existing_atom/1` is the right call — `String.to_atom/1` on user
+input lets a stranger grow the atom table until the VM dies, and atoms are
+never garbage collected. But the `rescue` clause quietly returns the *binary*
+when there is no such atom, so `normalize/1` can hand back a map whose keys are
+sometimes atoms and sometimes strings. Nothing breaks today, because
+`Map.take/2` filters unknown keys out a moment later. It is still a function
+with two return types where it wants one.
+
+The version that ships drops the unknown key instead:
+
+```elixir
+defp cast_key(key) when is_atom(key), do: {:ok, key}
+
+defp cast_key(key) when is_binary(key) do
+  {:ok, String.to_existing_atom(key)}
+rescue
+  # An unknown key is not an error: it is a field this record does not have.
+  ArgumentError -> :error
+end
+```
+
+Same behaviour, one kind of key out, and the intent is now written down rather
+than implied by what happens two functions later.
 
 That is the first hint of the shape of this lesson: **the rules belong to the
 board, not to the database.**
