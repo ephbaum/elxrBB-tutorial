@@ -42,6 +42,22 @@ Toolchain: Elixir 1.20.4 on Erlang/OTP 28.5.0.5, pinned in the application's
 moved forward before Part I was published — a tutorial that tells readers to
 install current Elixir has to have been run on it.
 
+## How the rule is enforced
+
+`.github/workflows/docs.yml` runs on every push:
+
+- **relative links resolve** — catches a lesson renamed or archived without
+  its references being updated, which has happened twice here.
+- **lessons point at merged code** — every lesson links to the file in
+  `ephbaum/elxrBB` it describes, and the build fails on a 404. A lesson that
+  is ahead of the code turns the build red, which is the whole point.
+
+The application repository runs `.github/workflows/ci.yml`: formatting, a
+compile with `--warnings-as-errors` (which gates Elixir's type checker), and
+the full suite including the multi-node cluster tests. Toolchain versions come
+from `.tool-versions`, so CI, a contributor's machine and lesson 1's install
+instructions cannot drift apart.
+
 ## What "written" means for a lesson
 
 1. The code it teaches is merged in the application repository.

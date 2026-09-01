@@ -1,0 +1,36 @@
+name: Docs
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  links:
+    name: relative links resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 .github/scripts/check_links.py
+
+  code-links:
+    name: lessons point at merged code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Every lesson links to the file in ephbaum/elxrBB it describes. A 404
+      # here means a lesson is ahead of the code -- which is the failure this
+      # tutorial was reset to stop making, so it fails the build rather than
+      # warning.
+      #
+      # Expect this to be red until the application's Part I branch merges to
+      # main; that is the correct reading, not a broken check.
+      - run: python3 .github/scripts/check_links.py --remote
