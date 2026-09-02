@@ -43,17 +43,16 @@ The original lessons were archived because:
 
 ## Also archived here
 
-- `02-user-authentication-pow.md` — the Pow-based version of lesson 2. It was
-  written for the restart and is more coherent than the 2023 original, but Pow
-  has not had a release since January 2025 and predates the Phoenix 1.8
-  conventions. Lesson 2 now uses `mix phx.gen.auth`. Kept for comparison.
+- `02-user-authentication-pow.md` — an earlier draft of lesson 2 built on the
+  Pow library. Lesson 2 now uses `mix phx.gen.auth`; this is kept for
+  reference.
 
 ## Current Status
 
 The current lessons live in `docs/`, and each one is written against code that
 exists in the application repository:
 - `01-setting-up.md` — Phoenix 1.8 on Elixir 1.20 / OTP 28
-- `02-user-authentication.md` — `phx.gen.auth`, usernames and bios
+- `02-user-authentication.md` — user accounts, usernames and bios
 - `03-forum-functionality.md` — forums, topics and replies
 
 ## Learning Value

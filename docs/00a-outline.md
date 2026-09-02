@@ -10,11 +10,11 @@
 - Installing Phoenix
 - Creating a new Phoenix project
 
-## Lesson 2: User Authentication with Pow
-- Adding Pow to your project
-- Configuring Pow for email-based authentication
-- Customizing user registration with a random username
-- Testing user authentication
+## Lesson 2: User Accounts
+- Generating authentication with `mix phx.gen.auth`
+- Scopes, magic-link login and email confirmation
+- Assigning each new account a random username
+- User profiles: usernames and biographies
 
 ## Lesson 3: Implementing Basic Forum Functionality
 - Creating a new context for forums

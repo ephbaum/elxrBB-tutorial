@@ -5,20 +5,16 @@
 We add accounts to elxrBB: registration, login, email confirmation, password
 and email changes — and the animal-themed usernames the forum is known for.
 
-## Why not Pow?
+## Authentication in Phoenix 1.8
 
-Earlier drafts of this tutorial used [Pow](https://hexdocs.pm/pow). We do not,
-for two reasons:
+Phoenix ships `mix phx.gen.auth`, which writes a complete email-based
+authentication system into your application: registration, magic-link login,
+email confirmation, password and email changes, and session management. It is
+maintained alongside the framework, its output matches the layouts and
+components the rest of the app uses, and — most usefully for a tutorial — the
+code lands in your repository where you can read and change it.
 
-1. Pow's last release was January 2025, and it predates the Phoenix 1.8 layout
-   and component conventions. Its generated templates do not match the rest of
-   the app, so you spend the lesson fighting styling instead of learning auth.
-2. Phoenix now ships `mix phx.gen.auth`, which is maintained alongside the
-   framework and generates code you own and can read.
-
-The Pow version of this lesson is preserved at
-[`docs/archive/original-lessons/02-user-authentication-pow.md`](archive/original-lessons/02-user-authentication-pow.md)
-if you want to compare.
+That is what we use.
 
 ## Running the generator
 
