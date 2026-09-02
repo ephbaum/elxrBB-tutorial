@@ -403,4 +403,5 @@ mix phx.server
 
 ## Next
 
-Lesson 4 adds threaded replies and voting on top of this structure.
+[Lesson 4](04-threading-and-voting.md) lets replies answer other replies, and
+adds voting on top of this structure.

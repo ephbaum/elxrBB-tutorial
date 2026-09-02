@@ -13,8 +13,8 @@ Numbering follows the revised [outline](docs/00a-outline.md).
 | 1 | Setting Up the Environment | ✅ Written | ✅ Yes |
 | 2 | User Accounts | ✅ Written | ✅ Yes |
 | 3 | Forums, Topics and Replies | ✅ Written | ✅ Yes |
-| 4 | Threaded Replies, Sub-Topics and Voting | 🚧 Next | 🚧 Next |
-| 5 | Real-Time Updates with PubSub | 📋 Outlined | ❌ No |
+| 4 | Threaded Replies, Sub-Topics and Voting | ✅ Written | ✅ Yes |
+| 5 | Real-Time Updates with PubSub | 🚧 Next | 🚧 Next |
 | 6 | Pagination and Search | 📋 Outlined | ❌ No |
 | 7 | Profiles, Avatars and Private Messaging | 📋 Outlined | ⚠️ Profiles shipped in lesson 2 |
 | 8 | Rich Text and Safe Rendering | 📋 Outlined | ❌ No |
@@ -38,10 +38,13 @@ Legend: ✅ done · 🚧 in progress · ⚠️ partial · 📋 planned · ❌ no
 - Forums: create, edit, delete. Public listing with topic counts.
 - Topics: created inside a forum by a signed-in user. Forum pages list them
   with reply counts, ordered by most recent activity.
-- Replies: posted from the topic page and appended live. Authors can edit and
-  delete their own posts.
+- Replies: posted from the topic page, nested up to five levels deep, with a
+  sub-reply count on every parent. Authors can edit and delete their own posts;
+  deleting one removes its subtree.
+- Voting: up and down votes on topics and replies, one per user per post,
+  revocable. Threads and forum listings can be sorted by score.
 
-186 tests pass on `mix precommit`.
+231 tests pass on `mix precommit`.
 
 ## Known gaps in the application
 
@@ -49,8 +52,8 @@ These are true of the code today and are scheduled, not forgotten:
 
 - **No pagination.** `list_topics/1` and `list_replies/1` return everything.
   Lesson 6.
-- **No real-time.** A posted reply appears for its author only; other readers
-  must reload. Lesson 5.
+- **No real-time.** A posted reply or vote appears for its author only; other
+  readers must reload. Lesson 5.
 - **No search.** Lesson 6.
 - **Post bodies render as plain text.** No Markdown, and therefore no
   sanitization question to answer yet. Lesson 8.

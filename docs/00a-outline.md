@@ -12,20 +12,20 @@ Status of each lesson is tracked in [STATUS.md](../STATUS.md).
 - Introducing Elixir and Phoenix
 - System requirements and setup
 
-## Lesson 1: Setting Up the Environment ✅
+## [Lesson 1: Setting Up the Environment](01-setting-up.md) ✅
 
 - Installing Elixir, Erlang/OTP and PostgreSQL
 - Installing the Phoenix project generator
 - Generating the elxrBB project and reading what it produced
 
-## Lesson 2: User Accounts ✅
+## [Lesson 2: User Accounts](02-user-authentication.md) ✅
 
 - Generating authentication with `mix phx.gen.auth`
 - Scopes, magic-link login and email confirmation
 - Assigning each new account a random username
 - User profiles: usernames and biographies
 
-## Lesson 3: Forums, Topics and Replies ✅
+## [Lesson 3: Forums, Topics and Replies](03-forum-functionality.md) ✅
 
 - The Forums context: forums, topics, replies
 - Schemas, associations and cascading deletes
@@ -33,7 +33,7 @@ Status of each lesson is tracked in [STATUS.md](../STATUS.md).
 - LiveViews for browsing, posting and replying
 - Counting replies without an N+1 or a counter column
 
-## Lesson 4: Threaded Replies, Sub-Topics and Voting
+## [Lesson 4: Threaded Replies, Sub-Topics and Voting](04-threading-and-voting.md) ✅
 
 - Self-referencing replies: `parent_id` and a nested tree
 - Rendering a thread recursively without an N+1

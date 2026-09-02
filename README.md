@@ -11,12 +11,13 @@ Build a forum web application with Elixir and Phoenix, one lesson at a time.
 | [Lesson 1](docs/01-setting-up.md) | Environment setup and generating the project |
 | [Lesson 2](docs/02-user-authentication.md) | Accounts, magic-link login, usernames and bios |
 | [Lesson 3](docs/03-forum-functionality.md) | Forums, topics and replies |
+| [Lesson 4](docs/04-threading-and-voting.md) | Threaded replies, sub-topics and voting |
 | [Status](STATUS.md) | Which lessons are written, and which are implemented |
 
 The reference application lives at
-[ephbaum/elxrBB](https://github.com/ephbaum/elxrBB). Lessons 1–3 are written
+[ephbaum/elxrBB](https://github.com/ephbaum/elxrBB). Lessons 1–4 are written
 against code that is actually in that repository and passes its test suite;
-everything from lesson 4 on is still an outline.
+everything from lesson 5 on is still an outline.
 
 Written against Phoenix 1.8 on Elixir 1.20 / OTP 28, using `mix phx.gen.auth`,
 LiveView, Tailwind 4 and daisyUI.
