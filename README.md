@@ -1,14 +1,37 @@
 # elxrBB-tutorial
 
+Build a forum web application with Elixir and Phoenix, one lesson at a time.
+
+## Start here
+
+| | |
+|---|---|
+| [Outline](docs/00a-outline.md) | The whole series at a glance |
+| [Introduction](docs/00b-introduction.md) | What elxrBB is and what it will do |
+| [Lesson 1](docs/01-setting-up.md) | Environment setup and generating the project |
+| [Lesson 2](docs/02-user-authentication.md) | Accounts, magic-link login, usernames and bios |
+| [Lesson 3](docs/03-forum-functionality.md) | Forums, topics and replies |
+| [Status](STATUS.md) | Which lessons are written, and which are implemented |
+
+The reference application lives at
+[ephbaum/elxrBB](https://github.com/ephbaum/elxrBB). Lessons 1–3 are written
+against code that is actually in that repository and passes its test suite;
+everything from lesson 4 on is still an outline.
+
+Written against Phoenix 1.8 on Elixir 1.20 / OTP 28, using `mix phx.gen.auth`,
+LiveView, Tailwind 4 and daisyUI.
+
+## Where this came from
+
 A (an ambitious) collaborative effort with ChatGPT (GPT-4) to create a tutorial for, and open source, a forum web application
 
-## What?
+### What?
 
 This repo is the result of a recent conversation with [ChatGPT](https://help.openai.com/en/collections/3742473-chatgpt) ([GPT4](https://openai.com/research/gpt-4)). The clever little chatbot suggested in true ChatGPT Dunning-Kruger style, and I figured 🤷‍♂️, okay, maybe we can build a real tutorial from this conversation
 
 Essentially, I asked ChatGPT about how to build a forum web app using Elixir and Phoenix
 
-## Why?
+### Why?
 
 The conversation around ChatGPT right now is wild. There's a lot of [doomers](https://www.reuters.com/technology/musk-experts-urge-pause-training-ai-systems-that-can-outperform-gpt-4-2023-03-29/) out there, [some moreso](https://time.com/6266923/ai-eliezer-yudkowsky-open-letter-not-enough/) than [others](https://astralcodexten.substack.com/p/why-i-am-not-as-much-of-a-doomer).
 
@@ -28,7 +51,7 @@ There is something amazing about working with an always-there (except when you h
 
 ChatGPT is a hell of a "yes-man" and has a pretty wide array of knowledge to draw from-
 
-## How?
+### How?
 
 I am just working with ChatGPT to build both this tutorial and the application
 
@@ -38,6 +61,6 @@ I do hope some folks might [contribute]() in the future, maybe even some folks w
 
 Or maybe it will be another repo gathering dust :shrug:
 
-## Important Note
+### Important Note
 
 I make no warranty. This is a work in progress and I have no idea what I'm doing (probably). ChatGPT and I seem to be having a pretty productive conversation, but this may all be made up bullshit. Do not rely on it until this document suggests otherwise. 

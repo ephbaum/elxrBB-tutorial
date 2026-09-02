@@ -2,204 +2,194 @@
 
 ## Overview
 
-In this lesson, we'll set up a modern Elixir and Phoenix development environment and create the elxrBB forum application. We'll use the latest stable versions and best practices.
+We install Elixir, Erlang/OTP and PostgreSQL, then generate the elxrBB
+application with the Phoenix project generator. By the end you will have a
+running Phoenix server on <http://localhost:4000>.
 
-## Prerequisites
+## What you need first
 
-- Basic familiarity with command line
-- Git installed
-- A text editor or IDE (VS Code recommended)
+- A command line, Git, and an editor.
+- Roughly 2 GB of free disk for the toolchain and dependencies.
 
-## Setting Up the Development Environment
+## Versions this tutorial was written against
 
-### Install Elixir
+The reference application is built and tested with:
 
-Visit the official Elixir installation page: https://elixir-lang.org/install.html
+| | Version |
+|---|---|
+| Elixir | 1.20.4 |
+| Erlang/OTP | 28 |
+| Phoenix | 1.8.13 |
+| PostgreSQL | 16 |
 
-**Recommended approach using asdf (version manager):**
+Phoenix 1.8 needs Elixir 1.15 or newer. Anything at or above that will work,
+but if you are following along exactly, matching the table saves surprises.
+
+## Installing Elixir and Erlang
+
+The official installer fetches precompiled builds and does not need a version
+manager:
 
 ```bash
-# Install asdf (if not already installed)
-git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
-
-# Add to your shell profile (~/.bashrc, ~/.zshrc, etc.)
-echo -e '\n. $HOME/.asdf/asdf.sh' >> ~/.bashrc
-echo -e '\n. $HOME/.asdf/completions/asdf.bash' >> ~/.bashrc
-
-# Reload your shell
-source ~/.bashrc
-
-# Install Erlang and Elixir
-asdf plugin add erlang
-asdf plugin add elixir
-asdf install erlang latest
-asdf install elixir latest
-asdf global erlang latest
-asdf global elixir latest
+curl -fsSO https://elixir-lang.org/install.sh
+sh install.sh elixir@1.20.4 otp@28.5.0.6
 ```
 
-**Verify installation:**
+It prints two `export PATH=...` lines. Add them to your shell profile
+(`~/.bashrc`, `~/.zshrc`) and reload it.
+
+If you prefer a version manager, [asdf](https://asdf-vm.com) or
+[mise](https://mise.jdx.dev) both work; use their `erlang` and `elixir`
+plugins. On macOS, `brew install elixir` installs a recent pair.
+
+Verify:
 
 ```bash
 elixir --version
-# Should show Elixir 1.15+ and Erlang/OTP 26+
+# Erlang/OTP 28 ...
+# Elixir 1.20.4 (compiled with Erlang/OTP 28)
 ```
 
-### Install Phoenix
+> **Locale note.** If Elixir warns about `native name encoding of latin1`, your
+> shell locale is not UTF-8. Set `LANG=C.UTF-8` (or your own UTF-8 locale), or
+> export `ELIXIR_ERL_OPTIONS="+fnu"`.
+
+## Installing Hex, Rebar and the Phoenix generator
 
 ```bash
-# Install Hex package manager
-mix local.hex
-
-# Install Phoenix project generator
-mix archive.install hex phx_new
+mix local.hex --force
+mix local.rebar --force
+mix archive.install hex phx_new --force
 ```
 
-### Install PostgreSQL
+`mix phx.new --version` should now report `Phoenix installer v1.8.13` or newer.
 
-**Ubuntu/Debian:**
+## Installing PostgreSQL
+
+**Debian/Ubuntu**
 
 ```bash
 sudo apt update
 sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
+sudo service postgresql start
 ```
 
-**macOS (with Homebrew):**
+**macOS**
 
 ```bash
-brew install postgresql
-brew services start postgresql
+brew install postgresql@16
+brew services start postgresql@16
 ```
 
-**Windows:**
-Download and install from: https://www.postgresql.org/download/windows/
-
-### Install Node.js
-
-**Using asdf (recommended):**
+Phoenix's development configuration expects a `postgres` role with the password
+`postgres`. On a fresh Debian/Ubuntu install:
 
 ```bash
-asdf plugin add nodejs
-asdf install nodejs latest
-asdf global nodejs latest
+sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
 ```
 
-**Or download from:** https://nodejs.org/
+## Node.js is not required
 
-## Creating the elxrBB Project
+Phoenix 1.8 builds assets with standalone [esbuild](https://esbuild.github.io)
+and [Tailwind](https://tailwindcss.com) binaries that `mix` downloads for you.
+There is no `package.json` and no `npm install`. You only need Node if you add a
+JavaScript toolchain of your own later.
 
-### Generate a New Phoenix Project
+## Generating the project
 
 ```bash
-# Create the project with LiveView and PostgreSQL
-mix phx.new elxrBB --live --database postgres
-
-# Navigate to the project directory
-cd elxrBB
+mix phx.new elxrbb --module ElxrBB --database postgres
+cd elxrbb
 ```
 
-### Configure the Database
+Two things about that command:
 
-The project generator creates a `config/dev.exs` file with default PostgreSQL settings. Update it if needed:
+- **`--live` is redundant.** LiveView is included by default in Phoenix 1.8.
+  The flag is still accepted and does nothing; older tutorials (including this
+  one, before it was rewritten) pass it out of habit.
+- **`--module ElxrBB`.** The OTP application name has to be a lowercase atom, so
+  the project is `:elxrbb` on disk while the Elixir modules are namespaced
+  `ElxrBB` / `ElxrBBWeb`. The original 2023 attempt tried to name the project
+  `elxrBB` directly, which the generator rejects.
 
-```elixir
-# config/dev.exs
-config :elxrBB, ElxrBB.Repo,
-  username: "postgres",
-  password: "postgres",
-  database: "elxrbb_dev",
-  hostname: "localhost",
-  show_sensitive_data_on_connection_error: true,
-  pool_size: 10
-```
+Answer `Y` when it offers to fetch dependencies.
 
-### Create the Database
+## Database setup and first run
 
 ```bash
-# Create the development database
-mix ecto.create
-
-# Run any existing migrations
-mix ecto.migrate
-```
-
-### Install Dependencies and Build Assets
-
-```bash
-# Install Elixir dependencies
-mix deps.get
-
-# Install and build frontend assets
-mix assets.setup
-mix assets.build
-```
-
-### Start the Development Server
-
-```bash
-# Start the Phoenix server
+mix setup      # deps.get, ecto.create, ecto.migrate, seeds, assets
 mix phx.server
 ```
 
-Visit [http://localhost:4000](http://localhost:4000) in your browser. You should see the default Phoenix welcome page.
+Visit <http://localhost:4000>. You should see the Phoenix welcome page.
 
-## Project Structure Overview
+`mix setup` is defined as an alias in `mix.exs`; look at it now, because it is
+the one command you will run after every `git pull` for the rest of the series.
 
-Your new Phoenix project has the following structure:
+## What the generator gave you
 
 ```
-elxrBB/
-├── assets/                 # Frontend assets (CSS, JS)
-├── config/                 # Configuration files
+elxrbb/
+├── assets/                  # app.css, app.js — built by esbuild + tailwind
+├── config/                  # config.exs, dev.exs, test.exs, prod.exs, runtime.exs
 ├── lib/
-│   ├── elxrBB/            # Business logic (contexts)
-│   ├── elxrBB_web/        # Web interface (controllers, views, templates)
-│   └── elxrBB.ex          # Main application module
-├── priv/
-│   ├── repo/              # Database migrations and seeds
-│   └── static/            # Static assets
-├── test/                  # Test files
-├── mix.exs                # Project dependencies
-└── README.md
+│   ├── elxrbb/              # contexts: your business logic
+│   │   ├── application.ex   # the OTP supervision tree
+│   │   ├── mailer.ex
+│   │   └── repo.ex          # the Ecto repository
+│   ├── elxrbb_web/          # everything HTTP
+│   │   ├── components/      # core_components.ex, layouts
+│   │   ├── controllers/
+│   │   ├── endpoint.ex      # the plug pipeline
+│   │   └── router.ex
+│   └── elxrbb.ex
+├── priv/repo/migrations/
+├── test/
+└── mix.exs
 ```
 
-## Key Phoenix Concepts
+The split that matters: `lib/elxrbb/` holds **contexts** — plain modules that
+own the data and the rules. `lib/elxrbb_web/` holds the web layer, which calls
+into contexts and knows nothing about SQL. Every lesson from here adds to both
+sides of that line, and keeping the line clean is most of what "idiomatic
+Phoenix" means.
 
-- **Contexts**: Business logic modules (e.g., `ElxrBB.Users`, `ElxrBB.Forums`)
-- **Controllers**: Handle HTTP requests
-- **Views**: Render responses (HTML, JSON)
-- **Templates**: HTML templates (using HEEx)
-- **LiveView**: Real-time, interactive web interfaces
-- **Ecto**: Database wrapper and query builder
+Two more files worth opening now:
+
+- `lib/elxrbb_web/components/core_components.ex` — the `<.button>`,
+  `<.input>`, `<.header>`, `<.table>` function components every template uses.
+  Phoenix 1.8 styles them with [daisyUI](https://daisyui.com) on top of
+  Tailwind 4.
+- `lib/elxrbb_web/components/layouts.ex` — `<Layouts.app>`, the wrapper every
+  page renders inside.
+
+## Useful commands
+
+```bash
+mix test                   # run the test suite (it creates its own database)
+mix format                 # format all code
+mix precommit              # compile with warnings-as-errors, format, test
+iex -S mix phx.server      # server with an attached REPL
+```
+
+`mix precommit` is generated for you and is the check to run before every
+commit in this series.
 
 ## Troubleshooting
 
-### Common Issues
+**`connection refused` from Ecto** — PostgreSQL is not running, or is not
+listening where `config/dev.exs` expects. Check `pg_isready`.
 
-**Database connection errors:**
+**`password authentication failed for user "postgres"`** — set the password as
+shown above, or edit `config/dev.exs` to match the role you actually have.
 
-- Ensure PostgreSQL is running
-- Check username/password in `config/dev.exs`
-- Verify database exists: `mix ecto.create`
+**`Port 4000 in use`** — something else is on it. `http: [port: 4001]` in
+`config/dev.exs` moves the server.
 
-**Asset build errors:**
+**Live reload complains about `inotify-tools`** — a development-only
+convenience; install `inotify-tools` on Linux or ignore it.
 
-- Ensure Node.js is installed
-- Run `mix assets.setup` to install frontend dependencies
+## Next
 
-**Port already in use:**
-
-- Change the port in `config/dev.exs` or kill the process using port 4000
-
-## Next Steps
-
-In the next lesson, we'll implement user authentication using the Pow library, which provides a robust, production-ready authentication system.
-
-## Additional Resources
-
-- [Phoenix Documentation](https://hexdocs.pm/phoenix/overview.html)
-- [Elixir Documentation](https://hexdocs.pm/elixir/Kernel.html)
-- [Ecto Documentation](https://hexdocs.pm/ecto/Ecto.html)
-- [LiveView Documentation](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)
+[Lesson 2](02-user-authentication.md) adds accounts: registration, login,
+email confirmation, and the animal-themed usernames elxrBB hands out.
