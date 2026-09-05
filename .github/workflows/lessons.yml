@@ -6,7 +6,8 @@ name: Lessons
 
 on:
   push:
-    branches: ["**"]
+    # Branches are covered by pull_request; this is for merges to main.
+    branches: [main]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -17,10 +18,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Check out the application the lessons teach
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ephbaum/elxrBB
           ref: ${{ vars.ELXRBB_REF || 'claude/modernization-implementation-puv702' }}
