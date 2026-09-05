@@ -22,8 +22,9 @@ The reference application is built and tested with:
 | Phoenix | 1.8.13 |
 | PostgreSQL | 16 |
 
-Phoenix 1.8 needs Elixir 1.15 or newer. Anything at or above that will work,
-but if you are following along exactly, matching the table saves surprises.
+The application's `mix.exs` requires Elixir 1.17 or newer, so anything at or
+above that will work. If you are following along exactly, matching the table
+saves surprises.
 
 ## Installing Elixir and Erlang
 

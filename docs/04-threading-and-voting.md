@@ -16,7 +16,7 @@ Both are small schema changes and a large amount of care about correctness.
 
 ### One column, and two constraints that keep it honest
 
-```elixir
+```elixir priv/repo/migrations/20260902052043_add_threading_to_replies.exs
 # priv/repo/migrations/..._add_threading_to_replies.exs
 @max_depth 5
 
@@ -93,7 +93,7 @@ where we hang the tree we assemble ourselves, which is a different job.
 
 ### Creating a nested reply
 
-```elixir
+```elixir lib/elxrbb/forums.ex
 def create_reply(%Topic{} = topic, %User{} = user, attrs, opts \\ []) do
   case resolve_parent(topic, Keyword.get(opts, :parent)) do
     {:ok, parent} ->
@@ -153,7 +153,7 @@ only has an id does not have to.
 
 The context loads a thread flat and assembles it in memory:
 
-```elixir
+```elixir lib/elxrbb/forums.ex
 def list_reply_tree(topic_id, user, opts) do
   replies = list_replies(topic_id)
   tallies = vote_tallies(:reply_id, Enum.map(replies, & &1.id), user)
@@ -203,7 +203,7 @@ second traversal.
 siblings, so a well-rated reply rises among its peers but never escapes its
 parent — the thread stays a conversation.
 
-```elixir
+```elixir lib/elxrbb/forums.ex
 defp sort_siblings(replies, :oldest), do: Enum.sort_by(replies, &{&1.inserted_at, &1.id})
 defp sort_siblings(replies, :newest), do: Enum.sort_by(replies, &{&1.inserted_at, &1.id}, :desc)
 defp sort_siblings(replies, :score), do: Enum.sort_by(replies, &{-&1.score, &1.id})
@@ -222,7 +222,7 @@ reader.
 A vote belongs to a topic or to a reply. The options are two tables, or one
 table with two nullable foreign keys. We take the second:
 
-```elixir
+```elixir priv/repo/migrations/20260902052044_create_votes.exs
 create table(:votes) do
   add :value, :integer, null: false
   add :user_id, references(:users, on_delete: :delete_all), null: false
@@ -309,7 +309,7 @@ the score by two, which surprises people who expect one, and is correct.
 
 ### Reading scores without an N+1
 
-```elixir
+```elixir lib/elxrbb/forums.ex
 defp vote_tallies(field, ids, user) do
   scores =
     from(v in Vote,
@@ -355,7 +355,7 @@ Sum the rows. Revisit only when a profiler says to.
 
 HEEx components can call themselves:
 
-```heex
+```heex lib/elxrbb_web/live/topic_live/show.ex
 <.reply_thread
   :if={reply.children != []}
   replies={reply.children}
@@ -493,7 +493,7 @@ violation and re-raises it with advice about `check_constraint/3`.
 
 And the LiveView equivalents, which push events a hostile client would push:
 
-```elixir
+```elixir test/elxrbb_web/live/topic_thread_test.exs
 test "a vote aimed at another topic's reply is ignored", %{conn: conn} do
   topic = topic_fixture()
   elsewhere = reply_fixture()

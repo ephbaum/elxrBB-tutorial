@@ -71,7 +71,7 @@ and a bio.
 
 ### The migration
 
-```elixir
+```elixir priv/repo/migrations/20260902035041_add_profile_fields_to_users.exs
 # priv/repo/migrations/..._add_profile_fields_to_users.exs
 defmodule ElxrBB.Repo.Migrations.AddProfileFieldsToUsers do
   use Ecto.Migration
@@ -323,7 +323,7 @@ existing email form:
 </.form>
 ```
 
-```elixir
+```elixir lib/elxrbb_web/live/user_live/settings.ex
 def handle_event("validate_profile", %{"user" => user_params}, socket) do
   profile_form =
     socket.assigns.current_scope.user
@@ -361,7 +361,7 @@ the next full page load.
 In `lib/elxrbb_web/components/layouts/root.html.heex`, swap the email for the
 username:
 
-```heex
+```heex lib/elxrbb_web/components/layouts/root.html.heex
 <li class="font-medium" title={@current_scope.user.email}>
   {@current_scope.user.username}
 </li>

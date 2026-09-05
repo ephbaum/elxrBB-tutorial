@@ -16,7 +16,7 @@ being the author.
 
 ### Forums
 
-```elixir
+```elixir priv/repo/migrations/20260902035623_create_forums.exs
 create table(:forums) do
   add :name, :string, null: false
   add :description, :text, null: false
@@ -31,7 +31,7 @@ Same case-insensitive uniqueness trick as usernames in lesson 2.
 
 ### Topics and replies
 
-```elixir
+```elixir priv/repo/migrations/20260902035650_create_topics.exs
 create table(:topics) do
   add :title, :string, null: false
   add :body, :text, null: false
@@ -45,7 +45,7 @@ create index(:topics, [:forum_id, "inserted_at DESC"])
 create index(:topics, [:user_id])
 ```
 
-```elixir
+```elixir priv/repo/migrations/20260902035651_create_replies.exs
 create table(:replies) do
   add :body, :text, null: false
   add :topic_id, references(:topics, on_delete: :delete_all), null: false
@@ -114,7 +114,7 @@ it.
 
 **Writes take an explicit author.**
 
-```elixir
+```elixir lib/elxrbb/forums.ex
 def create_topic(%Forum{} = forum, %User{} = user, attrs) do
   %Topic{forum_id: forum.id, user_id: user.id}
   |> Topic.changeset(attrs)
@@ -129,7 +129,7 @@ who is writing.
 
 **Authorization is a predicate, not a side effect.**
 
-```elixir
+```elixir lib/elxrbb/forums.ex
 def topic_owner?(%Topic{user_id: user_id}, %User{id: user_id}), do: true
 def topic_owner?(_topic, _user), do: false
 ```
@@ -147,7 +147,7 @@ or a `replies_count` column that has to be kept correct forever.
 
 The third option is one aggregate subquery:
 
-```elixir
+```elixir lib/elxrbb/forums.ex
 defp topics_with_counts do
   reply_stats =
     from(r in Reply,
@@ -187,7 +187,7 @@ Points of interest:
 
 ### Routes
 
-```elixir
+```elixir lib/elxrbb_web/router.ex
 # Posting requires an account.
 scope "/", ElxrBBWeb do
   pipe_through [:browser, :require_authenticated_user]
@@ -224,7 +224,7 @@ redirects a signed-out visitor to the login page. `:mount_current_scope`
 assigns the scope and lets them through — `@current_scope` is `nil` for a
 guest, which templates check directly:
 
-```heex
+```heex lib/elxrbb_web/live/forum_live/index.ex
 <.button :if={@current_scope} variant="primary" navigate={~p"/forums/new"}>
   <.icon name="hero-plus" /> New forum
 </.button>
@@ -258,7 +258,7 @@ end
 
 ...and again on save:
 
-```elixir
+```elixir lib/elxrbb_web/live/topic_live/form.ex
 defp save_topic(socket, :edit, topic_params) do
   %{topic: topic, current_scope: %{user: user}} = socket.assigns
 
@@ -281,7 +281,7 @@ re-checks. The same applies to `delete_reply` and `delete_topic` in
 `TopicLive.Show` keeps replies in a LiveView stream rather than an assign, so
 posting a reply appends one `<li>` instead of re-rendering the thread:
 
-```elixir
+```elixir lib/elxrbb_web/live/topic_live/show.ex
 def handle_event("save_reply", %{"reply" => reply_params}, socket) do
   case Forums.create_reply(socket.assigns.topic, current_user(socket), reply_params) do
     {:ok, reply} ->
@@ -304,7 +304,7 @@ from it — here, the reply count in the heading — has to be tracked separatel
 The markup needs `phx-update="stream"` on the container and an `id` on each
 child:
 
-```heex
+```heex lib/elxrbb_web/live/topic_live/show.ex
 <ul id="replies" phx-update="stream" class="divide-y divide-base-300">
   <li :for={{dom_id, reply} <- @streams.replies} id={dom_id} class="py-4">
     ...
@@ -316,7 +316,7 @@ child:
 
 Both the forum and the topic changesets trim whitespace:
 
-```elixir
+```elixir lib/elxrbb/forums/forum.ex
 |> update_change(:name, &trim/1)
 ```
 
@@ -326,7 +326,7 @@ Write that as `&String.trim/1` and the app crashes with a
 `String.trim/1` only accepts binaries. The nil-tolerant version lets
 `validate_required` do its job:
 
-```elixir
+```elixir lib/elxrbb/forums/forum.ex
 defp trim(nil), do: nil
 defp trim(value) when is_binary(value), do: String.trim(value)
 ```
@@ -339,7 +339,7 @@ it "just checks the obvious" — is what catches this.
 `priv/repo/seeds.exs` creates five starter forums, and skips ones that already
 exist so it is safe to re-run:
 
-```elixir
+```elixir priv/repo/seeds.exs
 existing = MapSet.new(Forums.list_forums(), &String.downcase(&1.name))
 
 for attrs <- forums, not MapSet.member?(existing, String.downcase(attrs.name)) do
@@ -352,7 +352,7 @@ end
 
 Fixtures take their associations as options, creating them on demand:
 
-```elixir
+```elixir test/support/fixtures/forums_fixtures.ex
 def topic_fixture(attrs \\ %{}) do
   {forum, attrs} = Map.pop_lazy(Map.new(attrs), :forum, &forum_fixture/0)
   {user, attrs} = Map.pop_lazy(attrs, :user, &user_fixture/0)
@@ -370,7 +370,7 @@ to create one explicitly, and a test that does can pass `forum: forum`.
 The tests worth writing are the ones about permissions, because they are the
 ones a click-through will not cover:
 
-```elixir
+```elixir test/elxrbb_web/live/topic_live_test.exs
 test "a visitor cannot delete someone else's reply", %{conn: conn} do
   topic = topic_fixture()
   reply = reply_fixture(topic: topic)

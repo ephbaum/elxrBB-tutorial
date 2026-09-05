@@ -1,0 +1,37 @@
+name: Lessons
+
+# The lessons quote the application's source. This checks the quotes are still
+# accurate, so a change to elxrBB that contradicts a lesson fails here rather
+# than in a reader's terminal.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # The application can drift without this repo changing, so check weekly too.
+    - cron: "17 6 * * 1"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check out the application the lessons teach
+        uses: actions/checkout@v4
+        with:
+          repository: ephbaum/elxrBB
+          ref: ${{ vars.ELXRBB_REF || 'claude/modernization-implementation-puv702' }}
+          # lessons.exs pins each lesson to the commit that concludes it, so
+          # the checker needs history, not just a tip snapshot.
+          fetch-depth: 0
+          path: .elxrbb
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.20.4"
+          otp-version: "28.5.0.6"
+
+      - run: elixir bin/check_lessons.exs --app .elxrbb

@@ -22,6 +22,24 @@ everything from lesson 5 on is still an outline.
 Written against Phoenix 1.8 on Elixir 1.20 / OTP 28, using `mix phx.gen.auth`,
 LiveView, Tailwind 4 and daisyUI.
 
+## Checking the lessons
+
+The lessons quote the application's source, and quoted code goes stale. Blocks
+that name their source file in the fence are checked against it:
+
+    elixir bin/check_lessons.exs --app ../elxrBB
+
+Each lesson is checked against the commit that concludes it, named in
+`lessons.exs` -- lesson 3 shows replies as a flat stream and lesson 4 replaces
+that with a tree, so checking either against the application's HEAD would
+report drift that is really the tutorial doing its job.
+
+Whitespace and whole-line comments are ignored, so a lesson may re-indent or
+reflow an excerpt and leave out a comment it explains in prose. A line of bare
+`...`, or a comment mentioning `...`, stands in for code the lesson is not
+showing. Pass `--strict` to also fail on source blocks that name no file; not
+every block names one yet, so the unannotated count is a backlog, not a bug.
+
 ## Where this came from
 
 A (an ambitious) collaborative effort with ChatGPT (GPT-4) to create a tutorial for, and open source, a forum web application
