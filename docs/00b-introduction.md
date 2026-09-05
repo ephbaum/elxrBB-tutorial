@@ -13,9 +13,9 @@ Our elxrBB forum application will include a variety of features that are commonl
 1. User authentication and registration with email verification.
 2. Publicly accessible discussion threads organized by topics.
 3. Threaded replies and support for subtopics.
-4. Real-time updates for all clients via a pub/sub architecture.
+4. Real-time updates for all clients via Phoenix PubSub.
 5. Upvote and downvote functionality for topics.
-6. User profiles with avatars, biographies, and preferred names.
+6. User profiles with avatars and biographies.
 7. Private messaging between users.
 8. User roles and a subscription system for "pro users."
 9. Media upload capabilities and support for different text formatting options (Markdown, BBCode, and WYSIWYG).

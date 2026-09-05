@@ -1,381 +1,431 @@
-# Lesson 2: User Authentication with Pow
+# Lesson 2: User Accounts
 
 ## Overview
 
-In this lesson, we'll implement user authentication for the elxrBB application using the Pow library. Pow provides a robust, production-ready authentication system with features like email confirmation, password reset, and session management.
+We add accounts to elxrBB: registration, login, email confirmation, password
+and email changes — and the animal-themed usernames the forum is known for.
 
-## Why Pow?
+## Authentication in Phoenix 1.8
 
-Pow is a batteries-included authentication library for Phoenix that provides:
+Phoenix ships `mix phx.gen.auth`, which writes a complete email-based
+authentication system into your application: registration, magic-link login,
+email confirmation, password and email changes, and session management. It is
+maintained alongside the framework, its output matches the layouts and
+components the rest of the app uses, and — most usefully for a tutorial — the
+code lands in your repository where you can read and change it.
 
-- User registration and login
-- Email confirmation
-- Password reset functionality
-- Session management
-- Extensible architecture
-- Production-ready security features
+That is what we use.
 
-## Adding Pow to the Project
-
-### 1. Add Pow Dependencies
-
-Add Pow to your `mix.exs` file:
-
-```elixir
-# mix.exs
-defp deps do
-  [
-    # ... existing dependencies ...
-    {:pow, "~> 1.0.29"},
-    {:bcrypt_elixir, "~> 2.0"}
-  ]
-end
-```
-
-Install the new dependencies:
+## Running the generator
 
 ```bash
+mix phx.gen.auth Accounts User users --live
 mix deps.get
+mix ecto.migrate
 ```
 
-### 2. Install Pow
+`--live` gives you LiveView-based registration and login pages rather than
+controller-rendered ones, which is what you want when the rest of the app is
+LiveView.
 
-Run the Pow installer:
+That single command writes a lot of code. It is *your* code — read it, change
+it. The pieces worth understanding before we build on top:
 
-```bash
-mix pow.install
-```
+| File | What it does |
+|---|---|
+| `lib/elxrbb/accounts.ex` | The context. Registration, tokens, email and password changes. |
+| `lib/elxrbb/accounts/user.ex` | The schema and its changesets — one changeset per operation, not one for everything. |
+| `lib/elxrbb/accounts/user_token.ex` | Session, magic-link, confirmation and email-change tokens. |
+| `lib/elxrbb/accounts/scope.ex` | `%Scope{user: user}` — what the web layer is allowed to see. |
+| `lib/elxrbb_web/user_auth.ex` | Plugs and `on_mount` hooks: `fetch_current_scope_for_user`, `require_authenticated`, `mount_current_scope`. |
+| `lib/elxrbb_web/live/user_live/*` | Registration, login, confirmation and settings LiveViews. |
 
-This command will:
+Run `mix test`. The generator writes its own tests, and they should all pass
+before you change anything.
 
-- Create a User schema
-- Generate database migrations
-- Update your router configuration
-- Create Pow configuration
+### Three concepts worth pausing on
 
-### 3. Configure Pow Extensions
+**Scopes.** The generator does not put a bare `current_user` in your assigns.
+It puts a `%Scope{}` there. Everything downstream — templates, LiveViews,
+context functions — takes the scope, so when elxrBB later grows organizations
+or roles, there is one place to widen. `@current_scope` is `nil` for a
+visitor who is not signed in, which is exactly the check your templates want.
 
-Install Pow extensions for email confirmation and password reset:
+**Magic links.** Registration asks only for an email address. The user gets a
+link, clicks it, and is signed in and confirmed. A password is optional and set
+later from the settings page. Fewer fields, no password reset flow to build.
 
-```bash
-mix pow.extension.phoenix.gen.templates --extension PowResetPassword --extension PowEmailConfirmation
-```
+**Sudo mode.** Changing your email or password requires having authenticated
+recently (20 minutes by default). `on_mount {ElxrBBWeb.UserAuth,
+:require_sudo_mode}` on the settings LiveView enforces it.
 
-### 4. Update Pow Configuration
+### Reading the emails in development
 
-Update your `config/config.exs` file with the complete Pow configuration:
+Confirmation and magic-link emails are captured, not sent. Visit
+<http://localhost:4000/dev/mailbox>.
 
-```elixir
-# config/config.exs
-config :elxrBB, :pow,
-  web_mailer_module: ElxrBBWeb,
-  web_module: ElxrBBWeb,
-  user: ElxrBB.Users.User,
-  repo: ElxrBB.Repo,
-  extensions: [PowResetPassword, PowEmailConfirmation],
-  controller_callbacks: Pow.Extension.Phoenix.ControllerCallbacks,
-  mailer_backend: ElxrBB.Pow.Mailer
-```
+## Adding elxrBB's own fields
 
-### 5. Create the Pow Mailer
+The generated user has an email and a password. A forum needs a display name
+and a bio.
 
-Create the mailer file for handling authentication emails:
+### The migration
 
-```elixir
-# lib/elxrBB_web/mails/pow/mailer.ex
-defmodule ElxrBB.Pow.Mailer do
-  use Pow.Phoenix.Mailer
-  require Logger
+```elixir priv/repo/migrations/20260902035041_add_profile_fields_to_users.exs
+# priv/repo/migrations/..._add_profile_fields_to_users.exs
+defmodule ElxrBB.Repo.Migrations.AddProfileFieldsToUsers do
+  use Ecto.Migration
 
-  def cast(%{user: user, subject: subject, text: text, html: html, assigns: _assigns}) do
-    %{to: user.email, subject: subject, text: text, html: html}
+  def up do
+    alter table(:users) do
+      add :username, :string, size: 30
+      add :bio, :text
+    end
+
+    execute "UPDATE users SET username = 'user' || id WHERE username IS NULL"
+
+    alter table(:users) do
+      modify :username, :string, size: 30, null: false
+    end
+
+    create unique_index(:users, ["lower(username)"], name: :users_lower_username_index)
   end
 
-  def process(email) do
-    # In development, we'll just log emails
-    # In production, you'd integrate with a real email service
-    Logger.debug("E-mail sent: #{inspect email}")
-  end
-end
-```
+  def down do
+    drop index(:users, ["lower(username)"], name: :users_lower_username_index)
 
-### 6. Update the User Schema
-
-The Pow installer creates a basic User schema. Let's enhance it with additional fields:
-
-```elixir
-# lib/elxrBB/users/user.ex
-defmodule ElxrBB.Users.User do
-  use Ecto.Schema
-  use Pow.Ecto.Schema
-  use Pow.Extension.Ecto.Schema,
-    extensions: [PowResetPassword, PowEmailConfirmation]
-
-  schema "users" do
-    pow_user_fields()
-
-    field :username, :string
-    field :bio, :string
-
-    timestamps()
-  end
-
-  def changeset(user_or_changeset, attrs) do
-    user_or_changeset
-    |> pow_changeset(attrs)
-    |> pow_extension_changeset(attrs)
-    |> Ecto.Changeset.cast(attrs, [:username, :bio])
-    |> Ecto.Changeset.validate_length(:username, min: 3, max: 20)
-    |> Ecto.Changeset.validate_length(:bio, max: 500)
-    |> Ecto.Changeset.unique_constraint(:username)
-  end
-end
-```
-
-### 7. Update the Users Context
-
-Create or update the Users context:
-
-```elixir
-# lib/elxrBB/users/users.ex
-defmodule ElxrBB.Users do
-  alias ElxrBB.Repo
-  alias ElxrBB.Users.User
-
-  def get_user_by_email(email), do: Repo.get_by(User, email: email)
-  def get_user_by_id(id), do: Repo.get(User, id)
-  def get_user_by_username(username), do: Repo.get_by(User, username: username)
-  def list_users, do: Repo.all(User)
-
-  def register_user(attrs) do
-    %User{}
-    |> User.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  def update_user(%User{} = user, attrs) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update()
-  end
-
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
-  end
-end
-```
-
-### 8. Update the Router
-
-Ensure your router includes Pow routes:
-
-```elixir
-# lib/elxrBB_web/router.ex
-defmodule ElxrBBWeb.Router do
-  use ElxrBBWeb, :router
-  use Pow.Phoenix.Router
-  use Pow.Extension.Phoenix.Router,
-    extensions: [PowResetPassword, PowEmailConfirmation]
-
-  pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, {ElxrBBWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-  end
-
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
-
-  # Pow authentication routes
-  scope "/" do
-    pipe_through :browser
-
-    pow_routes()
-    pow_extension_routes()
-  end
-
-  # Application routes
-  scope "/", ElxrBBWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
-  # Development routes
-  if Application.compile_env(:elxrBB, :dev_routes) do
-    import Phoenix.LiveDashboard.Router
-
-    scope "/dev" do
-      pipe_through :browser
-
-      live_dashboard "/dashboard", metrics: ElxrBBWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    alter table(:users) do
+      remove :username
+      remove :bio
     end
   end
 end
 ```
 
-### 9. Run Database Migrations
+Three things to notice.
 
-```bash
-# Run the migrations created by Pow
-mix ecto.migrate
-```
+**Add nullable, backfill, then constrain.** You cannot add a `NOT NULL` column
+to a table that already has rows. Even on a project with no users yet, writing
+the migration this way is the habit you want.
 
-### 10. Update the Endpoint
+**`up`/`down`, not `change`.** `change` cannot infer how to reverse an
+`execute`, so the reversible pair is written out by hand.
 
-Ensure your endpoint includes the Pow session plug:
+**The unique index is on `lower(username)`, not on `username`.** We want
+`Aardvark` to display with its capital A but still collide with `aardvark`.
+A functional index does that without the `citext` extension.
+
+### The schema
 
 ```elixir
-# lib/elxrBB_web/endpoint.ex
-defmodule ElxrBBWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :elxrBB
+# lib/elxrbb/accounts/user.ex
+schema "users" do
+  field :email, :string
+  # ... generated fields ...
+  field :username, :string
+  field :bio, :string
 
-  # ... existing configuration ...
+  timestamps(type: :utc_datetime)
+end
 
-  plug Plug.Session, @session_options
-  plug Pow.Plug.Session, otp_app: :elxrBB
-  plug ElxrBBWeb.Router
+@username_format ~r/^[A-Za-z0-9_-]+$/
+@username_max_length ElxrBB.Accounts.Username.max_length()
+
+def profile_changeset(user, attrs, opts \\ []) do
+  user
+  |> cast(attrs, [:username, :bio])
+  |> validate_username(opts)
+  |> validate_length(:bio, max: 500)
+end
+
+defp validate_username(changeset, opts) do
+  changeset =
+    changeset
+    |> update_change(:username, &trim/1)
+    |> validate_required([:username])
+    |> validate_length(:username, min: 3, max: @username_max_length)
+    |> validate_format(:username, @username_format,
+      message: "may only contain letters, numbers, underscores and hyphens"
+    )
+    |> unique_constraint(:username, name: :users_lower_username_index)
+
+  if Keyword.get(opts, :validate_unique, true) do
+    validate_username_available(changeset)
+  else
+    changeset
+  end
+end
+
+defp trim(nil), do: nil
+defp trim(value) when is_binary(value), do: String.trim(value)
+```
+
+`trim/1` has to accept `nil`. `update_change/3` runs whenever the field is
+cast — including when it is cast to `nil` — and `String.trim(nil)` raises a
+`FunctionClauseError` that surfaces as a 500 instead of a validation error.
+This is the kind of bug a test catches and a manual click-through does not.
+
+The `:validate_unique` option follows the pattern the generator already uses
+for email: live validation on every keystroke should not hit the database, but
+the final save should. The database index is the actual authority; the query
+just produces a nicer error.
+
+### The Users context additions
+
+```elixir
+# lib/elxrbb/accounts.ex
+def register_user(attrs) do
+  %User{}
+  |> User.email_changeset(attrs)
+  |> User.profile_changeset(Map.put_new(normalize(attrs), "username", generate_username()))
+  |> Repo.insert()
+end
+
+def generate_username(attempts \\ 5)
+
+def generate_username(0),
+  do: Username.generate() <> Integer.to_string(System.unique_integer([:positive]))
+
+def generate_username(attempts) do
+  candidate = Username.generate()
+
+  if username_taken?(candidate) do
+    generate_username(attempts - 1)
+  else
+    candidate
+  end
+end
+
+def username_taken?(username) do
+  Repo.exists?(
+    from(u in User, where: fragment("lower(?)", u.username) == ^String.downcase(username))
+  )
+end
+
+def get_user_by_username(username) when is_binary(username) do
+  Repo.one(
+    from(u in User, where: fragment("lower(?)", u.username) == ^String.downcase(username))
+  )
+end
+
+def update_user_profile(%User{} = user, attrs) do
+  user
+  |> User.profile_changeset(attrs)
+  |> Repo.update()
+end
+
+def change_user_profile(%User{} = user, attrs \\ %{}, opts \\ []) do
+  User.profile_changeset(user, attrs, opts)
 end
 ```
 
-## Testing Authentication
+`Map.put_new` means a caller who supplies a username keeps it; everyone else
+gets one assigned. Registration stays a single-field form.
 
-### 1. Start the Server
+## The username generator
+
+elxrBB names new accounts after a gerund verb and an animal:
+`ChortlingAardvark`, `WanderingZebu`, `PiningElephantShrew`. The word lists
+live in this repository under `data/`; copy them into the application:
+
+```bash
+mkdir -p priv/data
+cp ../elxrBB-tutorial/data/Animals.txt priv/data/animals.txt
+cp ../elxrBB-tutorial/data/GerundVerbs.txt priv/data/gerund_verbs.txt
+```
+
+```elixir
+# lib/elxrbb/accounts/username.ex
+defmodule ElxrBB.Accounts.Username do
+  @max_length 30
+
+  @priv_data Path.expand("../../../priv/data", __DIR__)
+  @animals_path Path.join(@priv_data, "animals.txt")
+  @verbs_path Path.join(@priv_data, "gerund_verbs.txt")
+
+  @external_resource @animals_path
+  @external_resource @verbs_path
+
+  load_words = fn path ->
+    path
+    |> File.read!()
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.replace(&1, ~r/[^A-Za-z]/, ""))
+    |> Enum.reject(&(&1 == ""))
+    |> Enum.map(fn <<first::utf8, rest::binary>> -> String.upcase(<<first::utf8>>) <> rest end)
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
+  @animals load_words.(@animals_path)
+  @verbs load_words.(@verbs_path)
+
+  @verbs_by_length @verbs |> Enum.sort_by(&byte_size/1) |> List.to_tuple()
+  @shortest_verb @verbs |> Enum.map(&byte_size/1) |> Enum.min()
+
+  @verbs_within Map.new(0..@max_length, fn budget ->
+                  {budget, Enum.count(@verbs, &(byte_size(&1) <= budget))}
+                end)
+
+  @usable_animals @animals
+                  |> Enum.filter(&(byte_size(&1) + @shortest_verb <= @max_length))
+                  |> List.to_tuple()
+
+  def generate do
+    animal = elem(@usable_animals, :rand.uniform(tuple_size(@usable_animals)) - 1)
+    fitting_verbs = Map.fetch!(@verbs_within, @max_length - byte_size(animal))
+    verb = elem(@verbs_by_length, :rand.uniform(fitting_verbs) - 1)
+
+    verb <> animal
+  end
+
+  def max_length, do: @max_length
+end
+```
+
+Three techniques in that module are worth taking away.
+
+**Compile-time loading.** The `load_words` anonymous function runs while the
+module compiles; `@animals` and `@verbs` are baked into the BEAM file. A note
+on why it is an anonymous function and not a `defp`: a module cannot call its
+own functions in its own body, because it does not exist yet.
+`@external_resource` tells `mix` to recompile when the text files change.
+
+**Cleaning the input.** The animal list has entries like `Adelie Penguin` and
+`American Staffordshire Terrier`. Stripping non-letters turns them into
+`AdeliePenguin` — collapsed, not discarded.
+
+**Respecting your own validation.** The naive version — pick any verb, pick any
+animal — can produce `MisunderstandingAmericanStaffordshireTerrier`, which is
+44 characters and fails the 30-character rule the schema enforces. Registration
+then blows up on a name the app itself chose.
+
+The fix keeps generation O(1). Verbs are sorted shortest-first in a tuple, so
+"every verb that fits in N bytes" is a prefix of that tuple, and
+`@verbs_within` says how long the prefix is. Pick an animal, look up the
+budget, index into the tuple. 544,116 valid pairs, all of them legal.
+
+This is the general lesson: **generated data has to satisfy the same
+constraints as user input.** Test it the same way, too.
+
+## Showing profiles in the UI
+
+### The settings page
+
+Add a profile form to `lib/elxrbb_web/live/user_live/settings.ex` above the
+existing email form:
+
+```heex
+<.form for={@profile_form} id="profile_form" phx-submit="update_profile" phx-change="validate_profile">
+  <.input field={@profile_form[:username]} type="text" label="Username" required />
+  <.input field={@profile_form[:bio]} type="textarea" label="Bio" maxlength="500" />
+  <.button variant="primary" phx-disable-with="Saving...">Save Profile</.button>
+</.form>
+```
+
+```elixir lib/elxrbb_web/live/user_live/settings.ex
+def handle_event("validate_profile", %{"user" => user_params}, socket) do
+  profile_form =
+    socket.assigns.current_scope.user
+    |> Accounts.change_user_profile(user_params, validate_unique: false)
+    |> Map.put(:action, :validate)
+    |> to_form()
+
+  {:noreply, assign(socket, profile_form: profile_form)}
+end
+
+def handle_event("update_profile", %{"user" => user_params}, socket) do
+  user = socket.assigns.current_scope.user
+  true = Accounts.sudo_mode?(user)
+
+  case Accounts.update_user_profile(user, user_params) do
+    {:ok, user} ->
+      {:noreply,
+       socket
+       |> put_flash(:info, "Profile updated.")
+       |> assign(:current_scope, ElxrBB.Accounts.Scope.for_user(user))
+       |> assign(:profile_form, to_form(Accounts.change_user_profile(user, %{}, validate_unique: false)))}
+
+    {:error, changeset} ->
+      {:noreply, assign(socket, :profile_form, to_form(changeset, action: :insert))}
+  end
+end
+```
+
+Re-assigning `:current_scope` after a successful save matters: the nav bar
+reads the username out of the scope, and without it the old name lingers until
+the next full page load.
+
+### The nav bar
+
+In `lib/elxrbb_web/components/layouts/root.html.heex`, swap the email for the
+username:
+
+```heex lib/elxrbb_web/components/layouts/root.html.heex
+<li class="font-medium" title={@current_scope.user.email}>
+  {@current_scope.user.username}
+</li>
+```
+
+## Testing
+
+The interesting tests are the ones about the generator and about case
+sensitivity:
+
+```elixir
+test "pairs a gerund verb with an animal" do
+  verbs = MapSet.new(Username.verbs())
+  animals = MapSet.new(Username.animals())
+
+  for _ <- 1..200 do
+    name = Username.generate()
+
+    assert name =~ ~r/^[A-Za-z]+$/
+    assert String.length(name) <= Username.max_length()
+
+    assert Enum.any?(verbs, fn verb ->
+             String.starts_with?(name, verb) and
+               MapSet.member?(animals, String.replace_prefix(name, verb, ""))
+           end)
+  end
+end
+
+test "rejects another user's username, ignoring case", %{user: user} do
+  other = user_fixture()
+
+  assert {:error, changeset} =
+           Accounts.update_user_profile(user, %{username: String.downcase(other.username)})
+
+  assert "has already been taken" in errors_on(changeset).username
+end
+
+test "keeping your own username is not a conflict", %{user: user} do
+  assert {:ok, _user} = Accounts.update_user_profile(user, %{username: user.username})
+end
+```
+
+That last one is the classic uniqueness bug: a naive "is this name taken?"
+check says yes when you save your profile without changing your name. The
+availability query excludes the current record's own id.
+
+Run the suite:
+
+```bash
+mix precommit
+```
+
+## Try it
 
 ```bash
 mix phx.server
 ```
 
-### 2. Test User Registration
+1. Register at <http://localhost:4000/users/register>.
+2. Open <http://localhost:4000/dev/mailbox> and click the login link.
+3. Look at the nav bar — you have been named after an animal.
+4. Change it at <http://localhost:4000/users/settings>.
 
-Visit [http://localhost:4000/registration/new](http://localhost:4000/registration/new) to test user registration.
+## Next
 
-### 3. Test User Login
-
-Visit [http://localhost:4000/session/new](http://localhost:4000/session/new) to test user login.
-
-### 4. Check Email Logs
-
-In development, authentication emails are logged to the console. Look for log messages like:
-
-```
-[debug] E-mail sent: %{to: "user@example.com", subject: "Confirm your email", ...}
-```
-
-## Customizing Authentication Templates
-
-### Generate Custom Templates
-
-```bash
-mix pow.phoenix.gen.templates
-```
-
-This creates customizable templates in `lib/elxrBB_web/controllers/pow/`.
-
-### Customize Registration Form
-
-You can customize the registration form to include additional fields:
-
-```html
-<!-- lib/elxrBB_web/controllers/pow/registration_html/new.html.heex -->
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div>
-      <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-        Create your account
-      </h2>
-    </div>
-
-    <.simple_form for={@changeset} action={~p"/registration"} method="post">
-      <.input field={@changeset[:email]} type="email" label="Email" required />
-      <.input field={@changeset[:password]} type="password" label="Password" required />
-      <.input field={@changeset[:password_confirmation]} type="password" label="Confirm Password" required />
-      <.input field={@changeset[:username]} type="text" label="Username" required />
-      <.input field={@changeset[:bio]} type="textarea" label="Bio (optional)" />
-
-      <:actions>
-        <.button class="w-full">Register</.button>
-      </:actions>
-    </.simple_form>
-
-    <div class="text-center">
-      <.link href={~p"/session/new"} class="text-indigo-600 hover:text-indigo-500">
-        Already have an account? Sign in
-      </.link>
-    </div>
-  </div>
-</div>
-```
-
-## Adding Authentication to Your Application
-
-### Protect Routes
-
-To protect routes that require authentication, add a plug:
-
-```elixir
-# lib/elxrBB_web/router.ex
-pipeline :protected do
-  plug Pow.Plug.RequireAuthenticated,
-    error_handler: Pow.Phoenix.PlugErrorHandler
-end
-
-scope "/", ElxrBBWeb do
-  pipe_through [:browser, :protected]
-
-  # Protected routes go here
-  get "/dashboard", DashboardController, :index
-end
-```
-
-### Access Current User
-
-In your controllers and LiveViews, you can access the current user:
-
-```elixir
-# In a controller
-def index(conn, _params) do
-  user = Pow.Plug.current_user(conn)
-  # ... rest of controller logic
-end
-
-# In a LiveView
-def mount(_params, _session, socket) do
-  user = Pow.Plug.current_user(socket.assigns[:__changed__][:conn])
-  # ... rest of mount logic
-end
-```
-
-## Next Steps
-
-In the next lesson, we'll implement the core forum functionality, including forums, topics, and replies. The authentication system we've built will be used to associate forum content with users.
-
-## Troubleshooting
-
-### Common Issues
-
-**"No route found" errors:**
-
-- Ensure `pow_routes()` and `pow_extension_routes()` are in your router
-- Check that the Pow session plug is in your endpoint
-
-**Email confirmation not working:**
-
-- Verify the mailer is properly configured
-- Check that email confirmation is enabled in the Pow config
-
-**Database errors:**
-
-- Run `mix ecto.migrate` to ensure all migrations are applied
-- Check that the User schema includes all required Pow fields
-
-## Additional Resources
-
-- [Pow Documentation](https://hexdocs.pm/pow/README.html)
-- [Pow Phoenix Integration](https://hexdocs.pm/pow/Phoenix.html)
-- [Pow Extensions](https://hexdocs.pm/pow/Pow.Extension.html)
+[Lesson 3](03-forum-functionality.md) builds the forum itself: forums,
+topics and replies, with the accounts from this lesson as their authors.

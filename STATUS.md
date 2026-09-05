@@ -1,56 +1,85 @@
 # Tutorial Status
 
-This document tracks the current status of each tutorial lesson and its corresponding implementation in the application repository.
+Tracks each lesson and whether the reference application actually implements it.
 
-## Lesson Status
+Application repository: <https://github.com/ephbaum/elxrBB>
 
-| Lesson | Title | Status | Application Commit | Notes |
-|--------|-------|--------|-------------------|-------|
-| 1 | Setting Up the Environment | ✅ Complete | Not started | Clean, modern instructions |
-| 2 | User Authentication with Pow | ✅ Complete | Not started | Updated configuration |
-| 3 | Forum Functionality | 🚧 Planned | Not started | Implementation plan ready |
-| 4 | Threaded Replies and Voting | 📋 Planned | Not started | Needs merging with lesson 5 |
-| 5 | Sub-topics | 📋 Planned | Not started | Merge with lesson 4 |
-| 6 | Private Messaging and Profiles | 📋 Planned | Not started | Needs modernization |
+## Lessons
 
-## Status Legend
+Numbering follows the revised [outline](docs/00a-outline.md).
 
-- ✅ **Complete** - Lesson is finished and validated
-- 🚧 **Planned** - Implementation plan is ready
-- 📋 **Planned** - Needs work before implementation
-- ❌ **Incomplete** - Not ready for implementation
+| # | Title | Lesson | Implemented |
+|---|---|---|---|
+| 1 | Setting Up the Environment | ✅ Written | ✅ Yes |
+| 2 | User Accounts | ✅ Written | ✅ Yes |
+| 3 | Forums, Topics and Replies | ✅ Written | ✅ Yes |
+| 4 | Threaded Replies, Sub-Topics and Voting | ✅ Written | ✅ Yes |
+| 5 | Real-Time Updates with PubSub | 🚧 Next | 🚧 Next |
+| 6 | Pagination and Search | 📋 Outlined | ❌ No |
+| 7 | Profiles, Avatars and Private Messaging | 📋 Outlined | ⚠️ Profiles shipped in lesson 2 |
+| 8 | Rich Text and Safe Rendering | 📋 Outlined | ❌ No |
+| 9 | Roles, Permissions and Moderation | 📋 Outlined | ❌ No |
+| 10 | Audit Trails and the Admin Dashboard | 📋 Outlined | ❌ No |
+| 11 | Notifications | 📋 Outlined | ❌ No |
+| 12 | Accessible Design | 📋 Outlined | ❌ No |
+| 13 | Testing in Depth | 📋 Outlined | ⚠️ App is tested; lesson not written |
+| 14 | Deploying elxrBB | 📋 Outlined | ❌ No |
+| 15 | Customizing and Extending | 📋 Outlined | ❌ No |
+| A–D | Appendices | 📋 Outlined | ❌ No |
 
-## Implementation Progress
+Legend: ✅ done · 🚧 in progress · ⚠️ partial · 📋 planned · ❌ not started
 
-### Application Repository
-- **Repository**: https://github.com/ephbaum/elxrBB
-- **Current Status**: Fresh start with documentation
-- **Next Step**: Begin Lesson 1 implementation
+## What the application does today
 
-### Tutorial Repository
-- **Repository**: https://github.com/ephbaum/elxrBB-tutorial
-- **Current Status**: Lessons 1-2 cleaned, Lesson 3 planned
-- **Next Step**: Complete remaining lesson plans
+- Accounts: registration, magic-link login, email confirmation, password and
+  email changes, sudo mode for sensitive edits.
+- Profiles: an auto-assigned `GerundAnimal` username (544,116 possible names)
+  plus a bio, both editable from the settings page.
+- Forums: create, edit, delete. Public listing with topic counts.
+- Topics: created inside a forum by a signed-in user. Forum pages list them
+  with reply counts, ordered by most recent activity.
+- Replies: posted from the topic page, nested up to five levels deep, with a
+  sub-reply count on every parent. Authors can edit and delete their own posts;
+  deleting one removes its subtree.
+- Voting: up and down votes on topics and replies, one per user per post,
+  revocable. Threads and forum listings can be sorted by score.
 
-## Validation Process
+231 tests pass on `mix precommit`.
 
-Each lesson will be validated by:
-1. Following the tutorial instructions
-2. Implementing in the application repository
-3. Testing functionality
-4. Updating this status document
-5. Linking to application commits
+## Known gaps in the application
 
-## Historical Context
+These are true of the code today and are scheduled, not forgotten:
 
-- **Original Lessons**: Archived in `docs/archive/original-lessons/`
-- **Original Application**: Archived in `archive/initial-attempt` branch
-- **Project Restart**: January 2025
+- **No pagination.** `list_topics/1` and `list_replies/1` return everything.
+  Lesson 6.
+- **No real-time.** A posted reply or vote appears for its author only; other
+  readers must reload. Lesson 5.
+- **No search.** Lesson 6.
+- **Post bodies render as plain text.** No Markdown, and therefore no
+  sanitization question to answer yet. Lesson 8.
+- **Anyone signed in can create, edit or delete a forum.** Only topics and
+  replies are author-restricted. Roles land in lesson 9.
+- **No rate limiting.** Not on the outline; worth adding before this is ever
+  exposed to the public internet.
 
-## Next Steps
+## Deviations from the original plan
 
-1. **Implement Lesson 1** - Environment setup
-2. **Implement Lesson 2** - User authentication
-3. **Implement Lesson 3** - Forum functionality
-4. **Update remaining lessons** - Modernize and complete
-5. **Validate all lessons** - Ensure tutorial/application alignment
+The outline itself was revised once lessons 1–3 existed; see
+[Revisions to this plan](docs/00a-outline.md#revisions-to-this-plan) for the
+full account. In short: lessons 4 and 5 were one lesson, real-time moved much
+earlier and switched from Channels to PubSub, pagination and search were
+missing entirely, testing moved earlier, the animal-names lesson was dropped
+as superseded by lesson 2, and the vendor-dependent material (payments, SMS,
+browser push) became optional appendices.
+
+## How a lesson gets marked done
+
+1. The lesson is written against code that exists.
+2. The code is in the application repository and `mix precommit` passes.
+3. Every command and snippet in the lesson was run, not assumed.
+4. This file is updated.
+
+## Archive
+
+- Original lessons (2023, ChatGPT-assisted): `docs/archive/original-lessons/`
+- Original application: the `archive/initial-attempt` branch of the app repo
